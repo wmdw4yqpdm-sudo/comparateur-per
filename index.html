@@ -74,7 +74,7 @@
 
 <div class="container">
 
-  <!-- 👤 INPUT -->
+  <!-- 👤 PROFIL -->
   <div class="card">
     <h2>Profil utilisateur</h2>
     <input id="name" placeholder="Nom">
@@ -83,31 +83,35 @@
     <button onclick="simulate()">Simuler</button>
   </div>
 
-  <!-- 📊 RESULTATS -->
+  <!-- 📋 RESULTATS -->
   <div class="card">
     <h2>Classement</h2>
     <div id="results"></div>
   </div>
 
-  <!-- 📈 GRAPHIQUE -->
+  <!-- 📊 GRAPHIQUE -->
   <div class="card">
-    <h2>Graphique comparatif</h2>
+    <h2>Graphique des rendements (3 ans)</h2>
     <canvas id="chart"></canvas>
   </div>
 
 </div>
 
 <script>
+
+// 📊 COMPAGNIES (mise à jour)
 const companies = [
-  { name: "Generali", entry: 0.95, exit: 0, yield: 6.1 },
-  { name: "Groupama", entry: 1.5, exit: 1, yield: 4.8 },
-  { name: "MMA", entry: 2.5, exit: 1.5, yield: 3.5 },
-  { name: "Macsf", entry: 3.0, exit: 2, yield: 3.2 },
-  { name: "Axa", entry: 4.5, exit: 2.5, yield: 3.0 }
+  { name: "Generali", entry: 0.95, exit: 0, yieldMin: 5.77, yieldMax: 8.89 },
+  { name: "Groupama", entry: 1.5, exit: 1, yieldMin: 4.2, yieldMax: 5.0 },
+  { name: "MMA", entry: 2.5, exit: 1.5, yieldMin: 3.2, yieldMax: 3.8 },
+  { name: "April", entry: 3.0, exit: 2, yieldMin: 3.0, yieldMax: 3.6 },
+  { name: "Axa", entry: 4.5, exit: 2.5, yieldMin: 2.8, yieldMax: 3.3 }
 ];
 
+// 📌 score basé sur moyenne rendement - frais
 function score(c){
-  return c.yield - (c.entry * 0.5) - (c.exit * 0.5);
+  const avgYield = (c.yieldMin + c.yieldMax) / 2;
+  return avgYield - (c.entry * 0.5) - (c.exit * 0.5);
 }
 
 function simulate(){
@@ -116,14 +120,17 @@ function simulate(){
     .map(c => ({...c, score: score(c)}))
     .sort((a,b) => b.score - a.score);
 
-  // 📋 TABLEAU
+  // 📋 affichage
   let html = "";
 
   ranked.forEach((c,i) => {
     html += `
       <div class="company">
         <div class="rank">${i+1}. ${c.name}</div>
-        <div>Frais entrée: ${c.entry}% | Sortie: ${c.exit}% | Rendement: ${c.yield}%</div>
+        <div>
+          Rendement 3 ans: ${c.yieldMin}% → ${c.yieldMax}% |
+          Frais entrée: ${c.entry}% | Sortie: ${c.exit}%
+        </div>
         <div>Score: ${c.score.toFixed(2)}</div>
       </div>
     `;
@@ -131,12 +138,12 @@ function simulate(){
 
   document.getElementById("results").innerHTML = html;
 
-  // 📊 GRAPHIQUE
+  // 📊 graphique
   const ctx = document.getElementById('chart');
 
   const labels = ranked.map(c => c.name);
-  const yields = ranked.map(c => c.yield);
-  const fees = ranked.map(c => c.entry);
+  const min = ranked.map(c => c.yieldMin);
+  const max = ranked.map(c => c.yieldMax);
 
   if (window.myChart) window.myChart.destroy();
 
@@ -146,27 +153,26 @@ function simulate(){
       labels: labels,
       datasets: [
         {
-          label: 'Rendement (%)',
-          data: yields,
-          backgroundColor: 'green'
+          label: 'Rendement min (%)',
+          data: min,
+          backgroundColor: 'orange'
         },
         {
-          label: 'Frais entrée (%)',
-          data: fees,
-          backgroundColor: 'red'
+          label: 'Rendement max (%)',
+          data: max,
+          backgroundColor: 'green'
         }
       ]
     },
     options: {
       responsive: true,
       scales: {
-        y: {
-          beginAtZero: true
-        }
+        y: { beginAtZero: true }
       }
     }
   });
 }
+
 </script>
 
 </body>
