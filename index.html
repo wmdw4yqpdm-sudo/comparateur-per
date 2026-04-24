@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comparateur PER</title>
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #f4f6f8;
+    }
+    header {
+      background: #111827;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #1e40af;
+    }
+    .company {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .rank {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Comparateur PER</h1>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Profil utilisateur</h2>
+    <input id="name" placeholder="Nom">
+    <input id="age" type="number" placeholder="Âge">
+    <input id="income" type="number" placeholder="Revenus annuels">
+    <button onclick="simulate()">Simuler</button>
+  </div>
+
+  <div class="card">
+    <h2>Classement</h2>
+    <div id="results"></div>
+  </div>
+
+</div>
+
+<script>
+const companies = [
+  { name: "Generali", entry: 0.95, exit: 0, yield: 6.1 },
+  { name: "AssurePlus", entry: 2.5, exit: 1, yield: 3.8 },
+  { name: "Banque Horizon", entry: 3.2, exit: 1.5, yield: 3.5 },
+  { name: "Mutuelle France", entry: 4.0, exit: 2, yield: 3.2 },
+  { name: "Capital Secure", entry: 4.5, exit: 2.5, yield: 3.0 }
+];
+
+function score(c){
+  return c.yield - (c.entry * 0.5) - (c.exit * 0.5);
+}
+
+function simulate(){
+  let ranked = companies
+    .map(c => ({...c, score: score(c)}))
+    .sort((a,b) => b.score - a.score);
+
+  let html = "";
+
+  ranked.forEach((c,i) => {
+    html += `
+      <div class="company">
+        <div class="rank">${i+1}. ${c.name}</div>
+        <div>Frais entrée: ${c.entry}% | Sortie: ${c.exit}% | Rendement: ${c.yield}%</div>
+        <div>Score: ${c.score.toFixed(2)}</div>
+      </div>
+    `;
+  });
+
+  document.getElementById("results").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
