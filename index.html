@@ -4,23 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Comparateur PER</title>
+
+  <!-- 📊 Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body {
       font-family: Arial;
       margin: 0;
       background: #f4f6f8;
     }
+
     header {
       background: #111827;
       color: white;
       padding: 20px;
       text-align: center;
     }
+
     .container {
       max-width: 900px;
       margin: auto;
       padding: 20px;
     }
+
     .card {
       background: white;
       padding: 15px;
@@ -28,11 +35,13 @@
       border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
+
     input {
       width: 100%;
       padding: 10px;
       margin: 5px 0;
     }
+
     button {
       background: #2563eb;
       color: white;
@@ -41,18 +50,22 @@
       cursor: pointer;
       border-radius: 5px;
     }
+
     button:hover {
       background: #1e40af;
     }
+
     .company {
       padding: 10px;
       border-bottom: 1px solid #eee;
     }
+
     .rank {
       font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -61,6 +74,7 @@
 
 <div class="container">
 
+  <!-- 👤 INPUT -->
   <div class="card">
     <h2>Profil utilisateur</h2>
     <input id="name" placeholder="Nom">
@@ -69,9 +83,16 @@
     <button onclick="simulate()">Simuler</button>
   </div>
 
+  <!-- 📊 RESULTATS -->
   <div class="card">
     <h2>Classement</h2>
     <div id="results"></div>
+  </div>
+
+  <!-- 📈 GRAPHIQUE -->
+  <div class="card">
+    <h2>Graphique comparatif</h2>
+    <canvas id="chart"></canvas>
   </div>
 
 </div>
@@ -90,10 +111,12 @@ function score(c){
 }
 
 function simulate(){
+
   let ranked = companies
     .map(c => ({...c, score: score(c)}))
     .sort((a,b) => b.score - a.score);
 
+  // 📋 TABLEAU
   let html = "";
 
   ranked.forEach((c,i) => {
@@ -107,6 +130,42 @@ function simulate(){
   });
 
   document.getElementById("results").innerHTML = html;
+
+  // 📊 GRAPHIQUE
+  const ctx = document.getElementById('chart');
+
+  const labels = ranked.map(c => c.name);
+  const yields = ranked.map(c => c.yield);
+  const fees = ranked.map(c => c.entry);
+
+  if (window.myChart) window.myChart.destroy();
+
+  window.myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Rendement (%)',
+          data: yields,
+          backgroundColor: 'green'
+        },
+        {
+          label: 'Frais entrée (%)',
+          data: fees,
+          backgroundColor: 'red'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
 }
 </script>
 
