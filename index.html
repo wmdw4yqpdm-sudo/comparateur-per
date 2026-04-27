@@ -1,203 +1,205 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Comparateur PER</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comparateur PER</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- 📊 Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-body{
-  font-family:Arial, sans-serif;
-  margin:0;
-  background:#f4f6f8;
-}
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #f4f6f8;
+    }
 
-header{
-  background:white;
-  padding:20px;
-  border-bottom:1px solid #ddd;
-}
+    header {
+      background: #111827;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
 
-.topbar{
-  display:flex;
-  align-items:center;
-  gap:20px;
-}
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
 
-.logo{
-  height:70px;
-}
+    .card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
 
-.title{
-  font-size:28px;
-  font-weight:bold;
-  color:#111827;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      box-sizing: border-box;
+    }
 
-.container{
-  max-width:950px;
-  margin:auto;
-  padding:20px;
-}
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
 
-.card{
-  background:white;
-  padding:20px;
-  margin-bottom:20px;
-  border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.08);
-}
+    button:hover {
+      background: #1e40af;
+    }
 
-input{
-  width:100%;
-  padding:10px;
-  margin:7px 0;
-  border:1px solid #ccc;
-  border-radius:6px;
-}
+    .company {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
 
-button{
-  background:#2563eb;
-  color:white;
-  border:none;
-  padding:12px;
-  border-radius:6px;
-  cursor:pointer;
-}
+    .rank {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
 
-button:hover{
-  background:#1e40af;
-}
-
-.company{
-  padding:12px;
-  border-bottom:1px solid #eee;
-}
-
-.rank{
-  font-weight:bold;
-  font-size:18px;
-}
-</style>
+    .client-box {
+      background: #eef2ff;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 
 <body>
 
 <header>
-  <div class="topbar">
-
-    <!-- LOGO -->
-    <img 
-      src="https://upload.wikimedia.org/wikipedia/commons/3/39/Alyor_logo.png"
-      class="logo"
-    >
-
-    <div class="title">
-      Comparateur PER
-    </div>
-
-  </div>
+  <h1>Comparateur PER</h1>
 </header>
 
 <div class="container">
 
-<div class="card">
-<h2>Profil client</h2>
+  <!-- 👤 PROFIL -->
+  <div class="card">
+    <h2>Profil utilisateur</h2>
 
-<input id="firstname" placeholder="Prénom">
-<input id="lastname" placeholder="Nom">
-<input id="profession" placeholder="Profession">
-<input id="age" type="number" placeholder="Âge">
-<input id="income" type="number" placeholder="Revenus annuels">
+    <input id="firstname" placeholder="Prénom">
+    <input id="name" placeholder="Nom">
+    <input id="profession" placeholder="Profession">
+    <input id="age" type="number" placeholder="Âge">
+    <input id="income" type="number" placeholder="Revenus annuels">
 
-<button onclick="simulate()">Simuler</button>
-</div>
+    <button onclick="simulate()">Simuler</button>
+  </div>
 
-<div class="card">
-<h2>Classement personnalisé</h2>
-<div id="results"></div>
-</div>
+  <!-- 📋 RESULTATS -->
+  <div class="card">
+    <h2>Classement</h2>
+    <div id="results"></div>
+  </div>
 
-<div class="card">
-<h2>Graphique des rendements</h2>
-<canvas id="chart"></canvas>
-</div>
+  <!-- 📊 GRAPHIQUE -->
+  <div class="card">
+    <h2>Graphique des rendements (3 ans)</h2>
+    <canvas id="chart"></canvas>
+  </div>
 
 </div>
 
 <script>
 
+// 📊 COMPAGNIES
 const companies = [
   { name: "Generali", entry: 0.95, exit: 0, yieldMin: 5.77, yieldMax: 8.70 },
   { name: "Groupama", entry: 1.5, exit: 1, yieldMin: 4.2, yieldMax: 5.0 },
   { name: "MMA", entry: 2.5, exit: 1.5, yieldMin: 3.2, yieldMax: 3.8 },
   { name: "April", entry: 3.0, exit: 2, yieldMin: 3.0, yieldMax: 3.6 },
-  { name: "AXA", entry: 4.5, exit: 2.5, yieldMin: 2.8, yieldMax: 3.3 }
+  { name: "Axa", entry: 4.5, exit: 2.5, yieldMin: 2.8, yieldMax: 3.3 }
 ];
 
+// 📌 score
 function score(c){
-  const avg = (c.yieldMin + c.yieldMax)/2;
-  return avg - (c.entry*0.5) - (c.exit*0.5);
+  const avgYield = (c.yieldMin + c.yieldMax) / 2;
+  return avgYield - (c.entry * 0.5) - (c.exit * 0.5);
 }
 
 function simulate(){
 
-let ranked = companies
-.map(c => ({...c, score: score(c)}))
-.sort((a,b)=> b.score-a.score);
+  const firstname = document.getElementById("firstname").value;
+  const lastname = document.getElementById("name").value;
+  const profession = document.getElementById("profession").value;
+  const age = document.getElementById("age").value;
+  const income = document.getElementById("income").value;
 
-let html = "";
+  let ranked = companies
+    .map(c => ({...c, score: score(c)}))
+    .sort((a,b) => b.score - a.score);
 
-ranked.forEach((c,i)=>{
+  let html = "";
 
-html += `
-<div class="company">
-<div class="rank">${i+1}. ${c.name}</div>
-<div>
-Rendement 3 ans : ${c.yieldMin}% → ${c.yieldMax}%
-</div>
-<div>
-Frais entrée : ${c.entry}% | Sortie : ${c.exit}%
-</div>
-<div>
-Score : ${c.score.toFixed(2)}
-</div>
-</div>
-`;
+  // 👤 Infos client
+  html += `
+    <div class="client-box">
+      <strong>Client :</strong> ${firstname} ${lastname}<br>
+      <strong>Profession :</strong> ${profession}<br>
+      <strong>Âge :</strong> ${age} ans<br>
+      <strong>Revenus :</strong> ${income} €
+    </div>
+  `;
 
-});
+  // 📋 Classement
+  ranked.forEach((c,i) => {
+    html += `
+      <div class="company">
+        <div class="rank">${i+1}. ${c.name}</div>
+        <div>
+          Rendement 3 ans : ${c.yieldMin}% → ${c.yieldMax}% |
+          Frais entrée : ${c.entry}% | Sortie : ${c.exit}%
+        </div>
+        <div>Score : ${c.score.toFixed(2)}</div>
+      </div>
+    `;
+  });
 
-document.getElementById("results").innerHTML = html;
+  document.getElementById("results").innerHTML = html;
 
-const ctx = document.getElementById("chart");
+  // 📊 Graphique
+  const ctx = document.getElementById('chart');
 
-const labels = ranked.map(c=>c.name);
-const max = ranked.map(c=>c.yieldMax);
+  const labels = ranked.map(c => c.name);
+  const min = ranked.map(c => c.yieldMin);
+  const max = ranked.map(c => c.yieldMax);
 
-if(window.myChart) window.myChart.destroy();
+  if (window.myChart) window.myChart.destroy();
 
-window.myChart = new Chart(ctx,{
-type:"bar",
-data:{
-labels:labels,
-datasets:[
-{
-label:"Rendement max (%)",
-data:max,
-backgroundColor:"green"
-}
-]
-},
-options:{
-responsive:true,
-scales:{
-y:{beginAtZero:true}
-}
-}
-});
-
+  window.myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Rendement min (%)',
+          data: min,
+          backgroundColor: 'orange'
+        },
+        {
+          label: 'Rendement max (%)',
+          data: max,
+          backgroundColor: 'green'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
 }
 
 </script>
