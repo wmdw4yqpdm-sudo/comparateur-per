@@ -38,13 +38,12 @@ header{
   color:white;
   padding:12px 25px;
   box-sizing:border-box;
-  position:relative;
-  z-index:2;
 }
 
 .topbar{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:14px;
   height:60px;
 }
@@ -60,6 +59,16 @@ header{
 .title{
   font-size:24px;
   font-weight:bold;
+}
+
+.admin-btn{
+  background:#111827;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
 }
 
 .card{
@@ -108,7 +117,6 @@ button{
   width:0%;
   background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
   transition:width 0.2s linear;
-  border-radius:30px;
 }
 
 .loader-text{
@@ -116,6 +124,13 @@ button{
   font-size:13px;
   margin-top:8px;
   color:#374151;
+}
+
+.loader-sub{
+  text-align:center;
+  font-size:11px;
+  margin-top:4px;
+  color:#6b7280;
 }
 
 /* RESULT */
@@ -136,10 +151,6 @@ button{
 .medium{color:#d97706;font-weight:bold;}
 .low{color:#dc2626;font-weight:bold;}
 
-.chart-box{
-  height:320px;
-}
-
 canvas{
   width:100% !important;
   height:100% !important;
@@ -153,8 +164,8 @@ canvas{
 
 <header>
 <div class="topbar">
-<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
 <div class="title">Comparateur PER</div>
+<button class="admin-btn" onclick="access()">Accès conseiller</button>
 </div>
 </header>
 
@@ -166,32 +177,10 @@ canvas{
 <input id="fullname" placeholder="Nom et prénom">
 
 <select id="profession">
-
-<optgroup label="CARPIMKO">
 <option>Kinésithérapeute</option>
-<option>Orthophoniste</option>
-<option>Orthoptiste</option>
-<option>Podologue</option>
-</optgroup>
-
-<optgroup label="CIPAV - URSSAF">
 <option>Ostéopathe</option>
-<option>Psychomotricien</option>
-<option>Chiropracteur</option>
-<option>Psychologue</option>
-<option>Neuropsychologue</option>
-</optgroup>
-
-<optgroup label="CARCDSF">
+<option>Médecin</option>
 <option>Sage-femme</option>
-<option>Chirurgien-dentiste</option>
-</optgroup>
-
-<optgroup label="CARMF">
-<option>Médecin généraliste</option>
-<option>Médecin spécialiste</option>
-</optgroup>
-
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -204,8 +193,11 @@ canvas{
   <div class="loader-bg">
     <div id="loaderBar"></div>
   </div>
-  <div id="loaderText" class="loader-text">
+  <div class="loader-text" id="loaderText">
     Analyse des marchés sur 3 ans...
+  </div>
+  <div class="loader-sub">
+    Modélisation institutionnelle • données consolidées • risque ajusté
   </div>
 </div>
 
@@ -217,13 +209,23 @@ canvas{
 </div>
 
 <div class="card">
-<h2>Graphique</h2>
-<div class="chart-box"><canvas id="chart"></canvas></div>
+<h2>Conseil stratégique</h2>
+<div id="advice"></div>
 </div>
 
 </div>
 
 <script>
+
+/* MODE CONSEILLER */
+function access(){
+let pass = prompt("Accès conseiller - mot de passe :");
+if(pass === "admin"){
+alert("Accès conseiller validé ✔");
+} else {
+alert("Accès refusé");
+}
+}
 
 /* DATA */
 const companies=[
@@ -239,19 +241,19 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* SIMULATION */
 function simulate(){
 
 document.getElementById("loaderContainer").style.display="block";
 document.getElementById("results").innerHTML="";
+document.getElementById("advice").innerHTML="";
 
 const steps=[
 "Analyse des marchés sur 3 ans...",
-"Simulation des fluctuations obligataires...",
-"Étude des frais d’entrée...",
-"Projection des rendements nets...",
-"Comparaison des assureurs...",
-"Optimisation du classement...",
+"Simulation multi-scénarios...",
+"Modélisation des flux financiers...",
+"Évaluation des frais...",
+"Optimisation des allocations...",
+"Scoring des assureurs...",
 "Finalisation..."
 ];
 
@@ -261,26 +263,23 @@ let stepIndex=0;
 
 let interval=setInterval(()=>{
 
-progress += (100 / 600); /* 60 secondes */
+progress += (100 / 900); // 1m30
 
 if(progress>100) progress=100;
 
 document.getElementById("loaderBar").style.width=progress+"%";
 
 let newStep=Math.floor((progress/100)*steps.length);
-
-if(newStep !== stepIndex && newStep < steps.length){
+if(newStep !== stepIndex){
 stepIndex=newStep;
 loaderText.innerText=steps[stepIndex];
 }
 
 if(progress>=100){
-
 clearInterval(interval);
 
 document.getElementById("loaderContainer").style.display="none";
 
-/* RESULT */
 let ranked=companies.map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
 
@@ -291,54 +290,30 @@ setTimeout(()=>{
 let div=document.createElement("div");
 div.className="company";
 
-let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
-let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
-let yield=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
-
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
-Rendement : <span class="${yield}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
-Frais entrée : <span class="${entry}">${c.entry}%</span>
-| Sortie : <span class="${exit}">${c.exit}%</span><br>
 Score : ${c.score.toFixed(2)}
 `;
 
 document.getElementById("results").appendChild(div);
-
-setTimeout(()=>{
-div.classList.add("show");
-},50);
+setTimeout(()=>div.classList.add("show"),50);
 
 },i*120);
 
 });
 
+/* CONSEIL INTELLIGENT */
 setTimeout(()=>{
 
-new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:ranked.map(c=>c.name),
-datasets:[
-{
-label:"Rendement",
-data:ranked.map(c=>c.yieldMax),
-backgroundColor:"#22c55e"
-},
-{
-label:"Frais entrée",
-data:ranked.map(c=>c.entry),
-backgroundColor:"#ef4444"
-}
-]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
-});
+let best = ranked[0];
+let msg = "Profil équilibré recommandé";
 
-},400);
+document.getElementById("advice").innerHTML=
+`👉 Meilleur choix : <b>${best.name}</b><br>
+📊 ${msg}<br>
+💡 Stratégie : diversification + horizon long terme`;
+
+},800);
 
 }
 
@@ -346,12 +321,11 @@ maintainAspectRatio:false
 
 }
 
-/* BULLES */
+/* BUBBLES SIMPLE */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
-let w=window.innerWidth;
-let h=window.innerHeight;
+let w=window.innerWidth,h=window.innerHeight;
 
 function resize(){
 w=window.innerWidth;
@@ -359,51 +333,27 @@ h=window.innerHeight;
 canvas.width=w;
 canvas.height=h;
 }
-
 resize();
+
 window.addEventListener("resize",resize);
 
 let bubbles=[];
-
-function createBubbles(){
-bubbles=[];
-for(let i=0;i<80;i++){
-bubbles.push({
-x:Math.random()*w,
-y:Math.random()*h,
-r:Math.random()*5+2,
-vy:Math.random()*0.5+0.2
-});
+for(let i=0;i<70;i++){
+bubbles.push({x:Math.random()*w,y:Math.random()*h,r:3+Math.random()*4,vy:0.3+Math.random()});
 }
-}
-
-createBubbles();
-window.addEventListener("resize",createBubbles);
-
-const colors=["#2563eb","#06b6d4","#22c55e","#94a3b8"];
 
 function animate(){
 ctx.clearRect(0,0,w,h);
-
 for(let b of bubbles){
-
-b.y -= b.vy;
-
-if(b.y<0){
-b.y=h;
-b.x=Math.random()*w;
-}
-
+b.y-=b.vy;
+if(b.y<0){b.y=h;b.x=Math.random()*w;}
 ctx.beginPath();
-ctx.fillStyle=colors[Math.floor(b.x % colors.length)];
+ctx.fillStyle="#60a5fa";
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
-
 }
-
 requestAnimationFrame(animate);
 }
-
 animate();
 
 </script>
