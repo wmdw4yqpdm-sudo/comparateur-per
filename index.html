@@ -194,7 +194,21 @@ canvas{
 
 <script>
 
-const companies=[
+/* =========================
+   SHUFFLE
+========================= */
+function shuffle(array){
+  for(let i=array.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [array[i],array[j]]=[array[j],array[i]];
+  }
+  return array;
+}
+
+/* =========================
+   COMPAGNIES BASE
+========================= */
+const companiesBase=[
 {name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
 {name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
 {name:"MMA",entry:2.6,exit:1.4,yieldMin:3.6,yieldMax:4.2},
@@ -202,11 +216,19 @@ const companies=[
 {name:"Axa",entry:4.4,exit:2.5,yieldMin:2.9,yieldMax:3.5}
 ];
 
+let companies=[];
+
+/* =========================
+   SCORE
+========================= */
 function score(c){
 const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
+/* =========================
+   CHART
+========================= */
 function renderChart(ranked){
 new Chart(document.getElementById("chart"),{
 type:"bar",
@@ -225,7 +247,16 @@ maintainAspectRatio:false
 });
 }
 
+/* =========================
+   SIMULATION
+========================= */
 function simulate(){
+
+/* 🔥 ordre aléatoire à chaque clic */
+companies = [
+  companiesBase[0], // Generali toujours 1er
+  ...shuffle(companiesBase.slice(1))
+];
 
 document.getElementById("loaderContainer").style.display="block";
 document.getElementById("results").innerHTML="";
@@ -237,10 +268,10 @@ const steps=[
 "Accès sécurisé au comparateur privé...",
 "Vérification des accès partenaires agréés...",
 "Chargement des grilles exclusives assureurs...",
-"Simulation des conditions de marché en environnement privé...",
+"Simulation des conditions de marché...",
 "Analyse des frais réels négociés...",
-"Croisement des données confidentielles partenaires...",
-"Finalisation de votre sélection personnalisée..."
+"Croisement des données partenaires...",
+"Finalisation de votre sélection..."
 ];
 
 let loaderText=document.getElementById("loaderText");
@@ -298,7 +329,9 @@ setTimeout(()=>renderChart(ranked), ranked.length*120+300);
 
 }
 
-/* BUBBLES */
+/* =========================
+   BUBBLES
+========================= */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
