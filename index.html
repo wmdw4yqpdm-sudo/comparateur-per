@@ -298,12 +298,19 @@ setTimeout(()=>div.classList.add("show"),50);
 },i*120);
 });
 
-/* CHARTS FIX */
-
-/* BAR */
+/* CHARTS */
 setTimeout(()=>{
 
-new Chart(document.getElementById("chart"),{
+const ctx=document.getElementById("chart").getContext("2d");
+const ctx2=document.getElementById("scoreChart").getContext("2d");
+const ctx3=document.getElementById("radarChart").getContext("2d");
+
+if(window.chart) window.chart.destroy();
+if(window.scoreChart) window.scoreChart.destroy();
+if(window.radarChart) window.radarChart.destroy();
+
+/* BAR */
+window.chart=new Chart(ctx,{
 type:"bar",
 data:{
 labels:ranked.map(c=>c.name),
@@ -317,7 +324,7 @@ options:{responsive:true,maintainAspectRatio:false}
 });
 
 /* SCORE */
-new Chart(document.getElementById("scoreChart"),{
+window.scoreChart=new Chart(ctx2,{
 type:"bar",
 data:{
 labels:ranked.map(c=>c.name),
@@ -331,7 +338,7 @@ options:{responsive:true,maintainAspectRatio:false}
 });
 
 /* RADAR */
-new Chart(document.getElementById("radarChart"),{
+window.radarChart=new Chart(ctx3,{
 type:"radar",
 data:{
 labels:["Rendement","Frais entrée","Frais sortie"],
@@ -346,9 +353,7 @@ options:{responsive:true,maintainAspectRatio:false}
 
 },400);
 
-}
-
-/* BUBBLES */
+/* BUBBLES COLORÉES PRO */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -362,19 +367,40 @@ window.addEventListener("resize",resize);
 
 let bubbles=[];
 for(let i=0;i<60;i++){
-bubbles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*5+2,v:Math.random()*0.4+0.1});
+bubbles.push({
+x:Math.random()*w,
+y:Math.random()*h,
+r:Math.random()*5+2,
+v:Math.random()*0.4+0.1
+});
 }
+
+const colors=[
+"rgba(37,99,235,0.18)",
+"rgba(6,182,212,0.15)",
+"rgba(34,197,94,0.14)",
+"rgba(148,163,184,0.12)"
+];
 
 function animate(){
 ctx.clearRect(0,0,w,h);
+
 for(let b of bubbles){
+
 b.y-=b.v;
 if(b.y<0){b.y=h;b.x=Math.random()*w;}
+
+ctx.shadowBlur=10;
+ctx.shadowColor="rgba(37,99,235,0.15)";
+
 ctx.beginPath();
-ctx.fillStyle="rgba(37,99,235,0.15)";
+ctx.fillStyle=colors[Math.floor(Math.random()*colors.length)];
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
+
+ctx.shadowBlur=0;
 }
+
 requestAnimationFrame(animate);
 }
 animate();
