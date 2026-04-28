@@ -332,15 +332,24 @@ let badge=c.score>5?"best":c.score>3.5?"medium":"low";
 html+=`
 <div class="company">
 <div class="rank">${i+1}. ${c.name}</div>
-<div>Rendement : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span></div>
+
+<div>
+Rendement : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span>
+</div>
+
+<div>
+Frais entrée : <span class="${c.entry<2?'best':c.entry<3.5?'medium':'low'}">${c.entry}%</span>
+ | Sortie : <span class="${c.exit<1?'best':c.exit<2?'medium':'low'}">${c.exit}%</span>
+</div>
+
 <div>Score : ${c.score.toFixed(2)}</div>
 </div>`;
 });
 
 document.getElementById("results").innerHTML=html;
 
-let reco=document.getElementById("recoBox");
-reco.innerHTML=`<div class="reco">🥇 Recommandation : ${best.name} est l’option la plus optimisée selon votre profil.</div>`;
+document.getElementById("recoBox").innerHTML=
+`<div class="reco">🥇 Recommandation : ${best.name} est l’option la plus optimisée selon votre profil.</div>`;
 
 const ctx=document.getElementById("chart");
 if(window.myChart) window.myChart.destroy();
@@ -351,7 +360,8 @@ window.myChart=new Chart(ctx,{
     labels:ranked.map(c=>c.name),
     datasets:[
       {label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},
-      {label:"Frais",data:ranked.map(c=>c.entry),backgroundColor:"red"}
+      {label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},
+      {label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}
     ]
   },
   options:{responsive:true,scales:{y:{beginAtZero:true}}}
