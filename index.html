@@ -3,158 +3,146 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Comparateur PER - Outil CGP Pro</title>
+<title>Comparateur PER</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{
-  --primary:#0b1f4b;
-  --accent:#2563eb;
-  --bg:#f6f7fb;
-  --card:#ffffff;
-  --text:#0f172a;
-  --muted:#64748b;
-  --good:#16a34a;
-  --mid:#f59e0b;
-  --bad:#dc2626;
-}
-
 body{
-  font-family:system-ui,Arial;
+  font-family:Arial, sans-serif;
   margin:0;
-  background:var(--bg);
-  color:var(--text);
+  background:#f4f6f8;
 }
 
 header{
-  background:var(--primary);
+  background:#031f94;
   color:white;
-  padding:18px 22px;
+  padding:18px 25px;
 }
 
 .topbar{
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:18px;
 }
 
 .logo{
-  height:48px;
+  height:55px;
   background:white;
-  padding:6px;
+  padding:6px 10px;
   border-radius:8px;
 }
 
 .title{
-  font-size:20px;
-  font-weight:800;
-}
-
-.subtitle{
-  font-size:12px;
-  opacity:.8;
+  font-size:28px;
+  font-weight:bold;
 }
 
 .container{
-  max-width:1100px;
+  max-width:950px;
   margin:auto;
   padding:20px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
-}
-
 .card{
-  background:var(--card);
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 6px 18px rgba(0,0,0,.05);
-}
-
-h3{
-  margin-top:0;
-  font-size:16px;
-  color:var(--primary);
+  background:white;
+  padding:18px;
+  margin-bottom:20px;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
 
 input{
   width:100%;
   padding:10px;
   margin:6px 0;
-  border:1px solid #e5e7eb;
-  border-radius:8px;
+  border:1px solid #ccc;
+  border-radius:6px;
+  box-sizing:border-box;
 }
 
 button{
-  width:100%;
-  padding:12px;
-  background:var(--accent);
+  background:#2563eb;
   color:white;
-  border:0;
-  border-radius:8px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-button:hover{opacity:.9}
-
-/* loader simple pro */
-.loader{
-  display:none;
-  margin-top:10px;
-  color:var(--muted);
-  font-size:13px;
-}
-
-.spinner{
-  width:18px;
-  height:18px;
-  border:2px solid #ddd;
-  border-top:2px solid var(--accent);
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-  display:inline-block;
-  margin-right:6px;
-}
-
-@keyframes spin{to{transform:rotate(360deg)}}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-}
-
-td,th{
-  padding:10px;
-  border-bottom:1px solid #eee;
-  text-align:left;
-}
-
-.badge{
-  padding:4px 8px;
-  border-radius:20px;
-  font-size:11px;
-  font-weight:700;
-}
-
-.good{background:#dcfce7;color:var(--good)}
-.mid{background:#fef3c7;color:var(--mid)}
-.bad{background:#fee2e2;color:var(--bad)}
-
-.reco{
-  background:#eff6ff;
+  border:none;
   padding:12px;
-  border-left:4px solid var(--accent);
-  border-radius:10px;
-  font-size:13px;
+  border-radius:6px;
+  cursor:pointer;
+  width:100%;
+  font-size:16px;
 }
 
-.small{font-size:12px;color:var(--muted)}
+button:hover{
+  background:#1e40af;
+}
+
+.company{
+  padding:12px;
+  border-bottom:1px solid #eee;
+}
+
+.rank{
+  font-weight:bold;
+  font-size:18px;
+  margin-bottom:6px;
+}
+
+.best{color:#059669;font-weight:bold;}
+.medium{color:#d97706;font-weight:bold;}
+.low{color:#dc2626;font-weight:bold;}
+
+.client-box{
+  background:#eef2ff;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:15px;
+}
+
+/* ===== LOADER PRO ===== */
+.loader-box{
+  display:none;
+  margin-top:20px;
+  text-align:center;
+}
+
+.hourglass{
+  width:42px;
+  height:42px;
+  margin:10px auto;
+  border:4px solid #2563eb;
+  border-top:4px solid transparent;
+  border-bottom:4px solid transparent;
+  border-radius:50%;
+  animation:spin3d 1s linear infinite;
+}
+
+@keyframes spin3d{
+  0%{transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg);}
+  100%{transform:rotateX(360deg) rotateY(360deg) rotateZ(360deg);}
+}
+
+.progress{
+  width:100%;
+  height:24px;
+  background:#e5e7eb;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.bar{
+  width:0%;
+  height:100%;
+  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
+  transition:width 0.5s linear;
+}
+
+.loading-text{
+  margin-top:10px;
+  text-align:center;
+  font-weight:bold;
+  color:#031f94;
+  min-height:20px;
+}
 
 </style>
 </head>
@@ -163,132 +151,165 @@ td,th{
 
 <header>
 <div class="topbar">
-<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
-<div>
-<div class="title">Comparateur PER - Outil CGP Pro</div>
-<div class="subtitle">Moteur de sélection multi-assureurs</div>
-</div>
+<img 
+src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80"
+class="logo"
+alt="Alyor"
+>
+
+<div class="title">Comparateur PER</div>
+
 </div>
 </header>
 
 <div class="container">
 
-<div class="grid">
-
 <div class="card">
-<h3>Profil client</h3>
+<h2>Profil utilisateur</h2>
+
+<input id="firstname" placeholder="Prénom">
+<input id="name" placeholder="Nom">
+<input id="profession" placeholder="Profession">
 <input id="age" type="number" placeholder="Âge">
 <input id="income" type="number" placeholder="Revenus annuels">
-<input id="horizon" type="number" placeholder="Horizon (années)">
-<input id="monthly" type="number" placeholder="Versement mensuel">
-<button onclick="run()">Analyser</button>
 
-<div class="loader" id="loader">
-<span class="spinner"></span>Analyse du dossier en cours...
-</div>
-</div>
+<button onclick="startLoading()">Simuler</button>
 
-<div class="card">
-<h3>Recommandation</h3>
-<div id="reco"></div>
+<div class="loader-box" id="loaderBox">
+
+<div class="hourglass"></div>
+
+<div class="progress">
+<div class="bar" id="bar"></div>
 </div>
 
+<div class="loading-text" id="loadingText">
+⏳ Analyse du profil client...
 </div>
 
-<div class="card">
-<h3>Comparatif assureurs</h3>
-<div id="table"></div>
+</div>
+
 </div>
 
 <div class="card">
-<h3>Projection</h3>
-<div id="projection"></div>
+<h2>Classement</h2>
+<div id="results"></div>
+</div>
+
+<div class="card">
+<h2>Graphique comparatif</h2>
+<canvas id="chart"></canvas>
 </div>
 
 </div>
 
 <script>
 
-const insurers=[
-{name:"Generali",risk:"equilibre",fee:1.2,y:7.2},
-{name:"AXA",risk:"prudent",fee:2.0,y:4.8},
-{name:"Groupama",risk:"equilibre",fee:1.6,y:5.6},
-{name:"MMA",risk:"prudent",fee:2.3,y:4.2},
-{name:"April",risk:"dynamique",fee:3.1,y:6.5}
+const companies = [
+{ name:"Generali", entry:0.95, exit:0, yieldMin:5.77, yieldMax:8.70 },
+{ name:"Groupama", entry:1.8, exit:1, yieldMin:4.3, yieldMax:5.2 },
+{ name:"MMA", entry:2.6, exit:1.4, yieldMin:3.6, yieldMax:4.2 },
+{ name:"April", entry:3.2, exit:2, yieldMin:3.1, yieldMax:3.8 },
+{ name:"Axa", entry:4.4, exit:2.5, yieldMin:2.9, yieldMax:3.5 }
 ];
 
-function suitability(i,profile){
-let score=i.y - i.fee*1.2;
-if(profile.horizon>15 && i.risk=="dynamique") score+=1.2;
-if(profile.horizon<10 && i.risk=="prudent") score+=1;
-return score;
+function score(c){
+const avg=(c.yieldMin+c.yieldMax)/2;
+return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-function run(){
+function startLoading(){
 
-document.getElementById("loader").style.display="block";
+document.getElementById("results").innerHTML="";
+document.getElementById("loaderBox").style.display="block";
 
-setTimeout(()=>{
+let bar=document.getElementById("bar");
+let txt=document.getElementById("loadingText");
 
-let age=+document.getElementById("age").value;
-let income=+document.getElementById("income").value;
-let horizon=+document.getElementById("horizon").value;
-let monthly=+document.getElementById("monthly").value;
+let progress=0;
 
-let profile={age,income,horizon,monthly};
+const steps=[
+"Analyse du profil client...",
+"Étude des frais d'entrée...",
+"Analyse des rendements...",
+"Comparaison des assureurs...",
+"Calcul du classement final...",
+"Résultat prêt"
+];
 
-let ranked=insurers.map(i=>({...i,score:suitability(i,profile)}))
+let i=0;
+
+let timer=setInterval(()=>{
+
+progress += 1;
+bar.style.width = progress + "%";
+
+if(progress % 20 === 0 && i < steps.length){
+txt.innerHTML = steps[i];
+i++;
+}
+
+if(progress >= 100){
+clearInterval(timer);
+setTimeout(simulate,500);
+}
+
+},60);
+
+}
+
+function simulate(){
+
+document.getElementById("loaderBox").style.display="none";
+
+const firstname=document.getElementById("firstname").value;
+const lastname=document.getElementById("name").value;
+const profession=document.getElementById("profession").value;
+const age=document.getElementById("age").value;
+const income=document.getElementById("income").value;
+
+let ranked=companies
+.map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
 
-// recommendation
-let best=ranked[0];
+let html="";
 
-document.getElementById("reco").innerHTML=`
-<div class='reco'>
-<b>Recommandation principale</b><br>
-${best.name} est le plus adapté au profil client.<br><br>
-<span class='small'>Raison: équilibre rendement / frais / horizon</span>
-</div>`;
+html += `
+<div class="client-box">
+<strong>Client :</strong> ${firstname} ${lastname}<br>
+<strong>Profession :</strong> ${profession}<br>
+<strong>Âge :</strong> ${age} ans<br>
+<strong>Revenus :</strong> ${income} €
+</div>
+`;
 
-// table
-let html=`<table>
-<tr><th>Assureur</th><th>Risque</th><th>Frais</th><th>Perf</th><th>Score</th></tr>`;
+ranked.forEach((c,i)=>{
 
-ranked.forEach(i=>{
-let cls=i.score>6?"good":i.score>4?"mid":"bad";
-html+=`
-<tr>
-<td>${i.name}</td>
-<td>${i.risk}</td>
-<td>${i.fee}%</td>
-<td>${i.y}%</td>
-<td><span class='badge ${cls}'>${i.score.toFixed(2)}</span></td>
-</tr>`;
-});
+let badge="low";
+if(c.score > 5) badge="best";
+else if(c.score > 3.5) badge="medium";
 
-html+="</table>";
+html += `
+<div class="company">
+<div class="rank">${i+1}. ${c.name}</div>
 
-document.getElementById("table").innerHTML=html;
+<div>
+Rendement :
+<span class="${badge}">
+${c.yieldMin}% → ${c.yieldMax}%
+</span>
+</div>
 
-// projection
-let r=0.06;
-let capital=monthly*12*((Math.pow(1+r,horizon)-1)/r);
+<div>
+Frais entrée :
+<span class="${c.entry<2 ? 'best' : c.entry<3.5 ? 'medium' : 'low'}">
+${c.entry}%
+</span>
+ | Sortie :
+<span class="${c.exit<1 ? 'best' : c.exit<2 ? 'medium' : 'low'}">
+${c.exit}%
+</span>
+</div>
 
-document.getElementById("projection").innerHTML=`
-<div class='reco'>
-<b>Projection client</b><br>
-Capital estimé: ${Math.round(capital).toLocaleString()} €<br>
-Hypothèse rendement: 6% moyen
-</div>`;
-
-// hide loader
-
-document.getElementById("loader").style.display="none";
-
-},800);
-}
-
-</script>
-
-</body>
-</html>
+<div>Score : ${c.score.toFixed(2)}</div>
+</di
