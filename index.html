@@ -213,15 +213,16 @@ document.getElementById("results").innerHTML="";
 document.getElementById("retirement").innerHTML="";
 document.getElementById("advice").innerHTML="";
 
-/* ⏳ CHARGEMENT 1 MIN 30 */
-let loader=0;
-let loading=setInterval(()=>{
+/* ⏳ CHARGEMENT 1M30 */
+let progress = 0;
 
-loader += 1.11; // 90 secondes ≈ 100%
-if(loader>100) loader=100;
+let loader=setInterval(()=>{
 
-if(loader>=100){
-clearInterval(loading);
+progress += 100 / 90; // 90 secondes = 1m30
+if(progress >= 100) progress = 100;
+
+if(progress >= 100){
+clearInterval(loader);
 
 /* RESULT */
 ranked.forEach((c,i)=>{
@@ -281,7 +282,8 @@ document.getElementById("advice").innerHTML=
 },900);
 
 }
-},90);
+},1000 / 90);
+
 }
 
 /* BULLES */
