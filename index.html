@@ -15,10 +15,22 @@ body{
   overflow-x:hidden;
 }
 
+/* BACKGROUND BUBBLES */
+#bubble-canvas{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+}
+
 header{
   background:#031f94;
   color:white;
   padding:18px 25px;
+  position:relative;
+  z-index:2;
 }
 
 .topbar{
@@ -99,14 +111,64 @@ button:hover{background:#1e40af;}
   margin-bottom:15px;
 }
 
-/* BUBBLES BACKGROUND */
-#bubble-canvas{
-  position:fixed;
-  top:0;
-  left:0;
+/* LOADER */
+.loader-box{
+  display:none;
+  margin-top:20px;
+}
+
+.loader-core{
+  width:70px;
+  height:70px;
+  margin:10px auto;
+  position:relative;
+}
+
+.loader-ring{
   width:100%;
   height:100%;
-  z-index:0;
+  border-radius:50%;
+  border:3px solid rgba(37,99,235,0.2);
+  border-top:3px solid #2563eb;
+  animation:spin 1s linear infinite;
+}
+
+.loader-center{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-weight:bold;
+  font-size:12px;
+  color:#031f94;
+}
+
+.loading-text{
+  text-align:center;
+  margin-top:10px;
+  font-weight:bold;
+  color:#031f94;
+}
+
+.loading-sub{
+  text-align:center;
+  font-size:13px;
+  color:#6b7280;
+}
+
+@keyframes spin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+
+.reco{
+  background:#f0fdf4;
+  border:1px solid #22c55e;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  font-weight:bold;
+  color:#065f46;
 }
 
 </style>
@@ -127,20 +189,34 @@ button:hover{background:#1e40af;}
 
 <div class="card">
 <h2>Profil utilisateur</h2>
+
 <input id="fullname" placeholder="Nom et prénom">
+
 <select id="profession">
 <option>Infirmier libéral</option>
-<option>Kinésithérapeute</option>
+<option>Masseur-kinésithérapeute</option>
 <option>Orthophoniste</option>
 <option>Ostéopathe</option>
 <option>Psychologue</option>
 <option>Chirurgien-dentiste</option>
 <option>Médecin</option>
 </select>
+
 <input id="age" type="number" placeholder="Âge">
 <input id="income" type="number" placeholder="Revenus annuels">
 <input id="monthly" type="number" placeholder="Versement mensuel">
+
 <button onclick="startLoading()">Simuler</button>
+
+<div class="loader-box" id="loaderBox">
+<div class="loader-core">
+<div class="loader-ring"></div>
+<div class="loader-center">CGP</div>
+</div>
+<div class="loading-text" id="loadingText">Analyse du profil...</div>
+<div class="loading-sub" id="loadingSub">Initialisation...</div>
+</div>
+
 </div>
 
 <div class="card">
@@ -150,7 +226,7 @@ button:hover{background:#1e40af;}
 </div>
 
 <div class="card">
-<h2>Graphique</h2>
+<h2>Graphique comparatif</h2>
 <canvas id="chart"></canvas>
 </div>
 
@@ -158,7 +234,6 @@ button:hover{background:#1e40af;}
 
 <script>
 
-/* DATA */
 const companies=[
 {name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
 {name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
@@ -172,10 +247,14 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* SIMULATION */
-function startLoading(){simulate();}
+function startLoading(){
+setTimeout(simulate,1500);
+}
 
 function simulate(){
+
+document.getElementById("loaderBox").style.display="none";
+
 const fullname=document.getElementById("fullname").value;
 const profession=document.getElementById("profession").value;
 const age=document.getElementById("age").value;
@@ -183,18 +262,20 @@ const income=document.getElementById("income").value;
 const monthly=document.getElementById("monthly").value;
 
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
+let best=ranked[0];
 
-let html=`<div class='client-box'>${fullname} - ${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois</div>`;
+let html=`<div class='client-box'>${fullname}<br>${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois</div>`;
 
 ranked.forEach((c,i)=>{
 html+=`<div class='company'>${i+1}. ${c.name} | Score ${c.score.toFixed(2)}</div>`;
 });
 
 document.getElementById("results").innerHTML=html;
+document.getElementById("recoBox").innerHTML=`<div class='reco'>🥇 ${best.name}</div>`;
 
 const ctx=document.getElementById("chart");
 if(window.chart)window.chart.destroy();
-window.chart=new Chart(ctx,{type:"bar",data:{labels:ranked.map(c=>c.name),datasets:[{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"}]}});
+window.chart=new Chart(ctx,{type:"bar",data:{labels:ranked.map(c=>c.name),datasets:[{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}]}});
 }
 
 /* BUBBLES INTERACTIVES */
@@ -210,37 +291,29 @@ let mouse={x:w/2,y:h/2};
 window.addEventListener("mousemove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
 
 let bubbles=[];
-for(let i=0;i<60;i++){
-  bubbles.push({
-    x:Math.random()*w,
-    y:Math.random()*h,
-    r:Math.random()*6+2,
-    vy:Math.random()*0.5+0.2
-  });
+for(let i=0;i<80;i++){
+  bubbles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*5+2,v:Math.random()*0.5+0.2});
 }
 
 function animate(){
 ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
+  b.y-=b.v;
+  if(b.y<0){b.y=h;b.x=Math.random()*w;}
 
-// mouvement vertical
-b.y-=b.vy;
-if(b.y<0){b.y=h; b.x=Math.random()*w;}
+  let dx=b.x-mouse.x;
+  let dy=b.y-mouse.y;
+  let d=Math.sqrt(dx*dx+dy*dy);
+  if(d<120){
+    b.x+=dx/d*2;
+    b.y+=dy/d*2;
+  }
 
-// attraction souris
-let dx=b.x-mouse.x;
-let dy=b.y-mouse.y;
-let dist=Math.sqrt(dx*dx+dy*dy);
-if(dist<120){
-  b.x+=dx/dist*1.5;
-  b.y+=dy/dist*1.5;
-}
-
-ctx.beginPath();
-ctx.fillStyle="rgba(37,99,235,0.15)";
-ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle="rgba(37,99,235,0.15)";
+  ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+  ctx.fill();
 }
 
 requestAnimationFrame(animate);
