@@ -16,7 +16,6 @@ html,body{
   overflow-x:hidden;
 }
 
-/* 🫧 BULLES */
 #bubbleCanvas{
   position:fixed;
   inset:0;
@@ -34,7 +33,6 @@ html,body{
   padding:20px;
 }
 
-/* HEADER */
 header{
   background:#031f94;
   color:white;
@@ -64,7 +62,6 @@ header{
   font-weight:bold;
 }
 
-/* CARDS */
 .card{
   background:white;
   padding:18px;
@@ -93,7 +90,6 @@ button{
   font-size:16px;
 }
 
-/* RESULT */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -183,7 +179,6 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* SIMULATION */
 function simulate(){
 
 let ranked=companies.map(c=>({...c,score:score(c)}))
@@ -234,59 +229,91 @@ options:{responsive:true,maintainAspectRatio:false}
 
 }
 
-/* 🫧 BULLES FIX DEFINITIF (STABLE + SANS BUG) */
-const canvas=document.getElementById("bubbleCanvas");
-const ctx=canvas.getContext("2d");
+/* 🫧 BULLES 3D (TON CODE INTÉGRÉ EXACTEMENT) */
+const canvas = document.getElementById("bubbleCanvas");
+const ctx = canvas.getContext("2d");
 
-let w=window.innerWidth;
-let h=window.innerHeight;
+let w = window.innerWidth;
+let h = window.innerHeight;
 
 function resize(){
-w=window.innerWidth;
-h=window.innerHeight;
-canvas.width=w;
-canvas.height=h;
+  w = window.innerWidth;
+  h = window.innerHeight;
+  canvas.width = w;
+  canvas.height = h;
 }
 resize();
-window.addEventListener("resize",resize);
+window.addEventListener("resize", resize);
 
-let bubbles=[];
+/* 🖱️ souris */
+const mouse = {
+  x: w / 2,
+  y: h / 2
+};
+
+window.addEventListener("mousemove", (e)=>{
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+/* 🫧 bulles */
+let bubbles = [];
 
 function createBubbles(){
-bubbles=[];
-for(let i=0;i<80;i++){
-bubbles.push({
-x:Math.random()*w,
-y:Math.random()*h,
-r:Math.random()*5+2,
-vy:Math.random()*0.5+0.2
-});
-}
+  bubbles = [];
+  for(let i=0;i<80;i++){
+    bubbles.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      r: Math.random()*5+2,
+
+      /* profondeur fake 3D */
+      z: Math.random()*1+0.3,
+
+      vy: Math.random()*0.4+0.15
+    });
+  }
 }
 createBubbles();
-window.addEventListener("resize",createBubbles);
+window.addEventListener("resize", createBubbles);
 
-/* couleurs FIXES ultra stables */
-const colors=["#2563eb","#06b6d4","#22c55e","#94a3b8"];
+/* couleurs sobres */
+const colors = ["#2563eb","#06b6d4","#22c55e","#94a3b8"];
 
 function animate(){
-ctx.clearRect(0,0,w,h);
+  ctx.clearRect(0,0,w,h);
 
-for(let b of bubbles){
-b.y-=b.vy;
+  for(let b of bubbles){
 
-if(b.y<0){
-b.y=h;
-b.x=Math.random()*w;
-}
+    /* flottement vertical */
+    b.y -= b.vy * b.z;
 
-ctx.beginPath();
-ctx.fillStyle=colors[Math.floor(b.x % colors.length)];
-ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-ctx.fill();
-}
+    if(b.y < 0){
+      b.y = h;
+      b.x = Math.random()*w;
+    }
 
-requestAnimationFrame(animate);
+    /* 💫 effet souris + profondeur (3D illusion) */
+    let dx = (mouse.x - b.x) * 0.002 * b.z;
+    let dy = (mouse.y - b.y) * 0.002 * b.z;
+
+    b.x += dx;
+    b.y += dy;
+
+    /* rendu */
+    ctx.beginPath();
+    ctx.fillStyle = colors[Math.floor(b.x % colors.length)];
+
+    /* taille + opacité selon profondeur */
+    ctx.globalAlpha = 0.15 + b.z * 0.3;
+
+    ctx.arc(b.x, b.y, b.r * b.z, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+  }
+
+  requestAnimationFrame(animate);
 }
 animate();
 
