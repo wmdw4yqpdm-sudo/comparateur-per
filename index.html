@@ -122,50 +122,18 @@ button{
 .medium{color:#d97706;font-weight:bold;}
 .low{color:#dc2626;font-weight:bold;}
 
-.chart-box{height:320px;}
+.chart-box{
+  height:320px;
+}
 
 canvas{
   width:100% !important;
   height:100% !important;
 }
-
-/* LOGIN BUTTON */
-#loginBtn{
-  position:fixed;
-  top:10px;
-  left:10px;
-  z-index:999;
-  width:auto;
-  padding:8px 12px;
-  font-size:13px;
-  background:#111827;
-}
-
-/* RISK BUTTONS */
-.risk-box{
-  display:flex;
-  gap:8px;
-  margin:10px 0;
-}
-
-.risk-box button{
-  flex:1;
-  font-size:13px;
-  padding:8px;
-  background:#e5e7eb;
-  color:#111;
-}
-
-.risk-box button.active{
-  background:#2563eb;
-  color:white;
-}
 </style>
 </head>
 
 <body>
-
-<button id="loginBtn" onclick="login()">Login</button>
 
 <canvas id="bubbleCanvas"></canvas>
 
@@ -197,12 +165,6 @@ canvas{
 <input id="income" type="number" placeholder="Revenus annuels">
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
-<div class="risk-box">
-<button onclick="setRisk('prudent',this)" class="active">Prudent</button>
-<button onclick="setRisk('balanced',this)">Équilibré</button>
-<button onclick="setRisk('dynamic',this)">Dynamique</button>
-</div>
-
 <button onclick="simulate()">Lancer l’analyse</button>
 
 <div id="loaderContainer">
@@ -226,20 +188,11 @@ canvas{
 <div class="chart-box">
   <canvas id="chart"></canvas>
 </div>
-<div id="capital"></div>
 </div>
 
 </div>
 
 <script>
-
-let risk="prudent";
-
-function setRisk(r,btn){
-risk=r;
-document.querySelectorAll(".risk-box button").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-}
 
 const companies=[
 {name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
@@ -249,27 +202,9 @@ const companies=[
 {name:"Axa",entry:4.4,exit:2.5,yieldMin:2.9,yieldMax:3.5}
 ];
 
-function adjustYield(c){
-if(risk==="prudent") return c.yieldMin;
-if(risk==="balanced") return (c.yieldMin+c.yieldMax)/2;
-return c.yieldMax*1.1;
-}
-
 function score(c){
-let y=adjustYield(c);
-return y-(c.entry*0.55)-(c.exit*0.45);
-}
-
-function animateCapital(value){
-let el=document.getElementById("capital");
-let start=0;
-let step=value/80;
-
-let i=setInterval(()=>{
-start+=step;
-if(start>=value){start=value;clearInterval(i);}
-el.innerHTML="Capital projeté : <strong>"+Math.round(start).toLocaleString()+" €</strong>";
-},20);
+const avg=(c.yieldMin+c.yieldMax)/2;
+return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
 function renderChart(ranked){
@@ -278,27 +213,48 @@ type:"bar",
 data:{
 labels:ranked.map(c=>c.name),
 datasets:[
-{label:"Rendement",data:ranked.map(c=>adjustYield(c)),backgroundColor:"#22c55e"},
+{label:"Rendement max",data:ranked.map(c=>c.yieldMax),backgroundColor:"#22c55e"},
 {label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"#ef4444"},
 {label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"#f97316"}
 ]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
 }
 });
-animateCapital(50000 + ranked[0].score*8000);
 }
 
 function simulate(){
 
 document.getElementById("loaderContainer").style.display="block";
 document.getElementById("results").innerHTML="";
-document.getElementById("capital").innerHTML="";
+
+const steps=[
+"Accès sécurisé au comparateur privé...",
+"Vérification des accès partenaires agréés...",
+"Chargement des grilles exclusives assureurs...",
+"Simulation des conditions de marché en environnement privé...",
+"Analyse des frais réels négociés...",
+"Croisement des données confidentielles partenaires...",
+"Finalisation de votre sélection personnalisée..."
+];
 
 let progress=0;
+let stepIndex=0;
+
+let loaderText=document.getElementById("loaderText");
 
 let interval=setInterval(()=>{
 
-progress+=(100/900);
+progress += (100/900);
 document.getElementById("loaderBar").style.width=progress+"%";
+
+let newStep=Math.floor((progress/100)*steps.length);
+if(newStep!==stepIndex && newStep<steps.length){
+stepIndex=newStep;
+loaderText.innerText=steps[stepIndex];
+}
 
 if(progress>=100){
 clearInterval(interval);
@@ -310,18 +266,24 @@ let ranked=companies.map(c=>({...c,score:score(c)}))
 
 ranked.forEach((c,i)=>{
 setTimeout(()=>{
+
+let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
+let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
+let yield=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
+
 let div=document.createElement("div");
 div.className="company";
 
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
-Rendement : ${adjustYield(c).toFixed(2)}%<br>
-Frais entrée : ${c.entry}%<br>
-Frais sortie : ${c.exit}%
+Rendement : <span class="${yield}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
+Frais entrée : <span class="${entry}">${c.entry}%</span><br>
+Frais sortie : <span class="${exit}">${c.exit}%</span>
 `;
 
 document.getElementById("results").appendChild(div);
 setTimeout(()=>div.classList.add("show"),50);
+
 },i*120);
 });
 
@@ -331,16 +293,6 @@ setTimeout(()=>renderChart(ranked), ranked.length*120+300);
 
 },100);
 
-}
-
-/* LOGIN SIMPLE */
-function login(){
-let pass=prompt("Accès conseiller privé - entre ton code :");
-if(pass==="admin"){
-alert("Accès autorisé");
-}else{
-alert("Accès refusé");
-}
 }
 
 /* BUBBLES */
