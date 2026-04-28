@@ -48,14 +48,6 @@ header{
   height:60px;
 }
 
-.logo{
-  height:42px;
-  background:white;
-  padding:4px 8px;
-  border-radius:8px;
-  object-fit:contain;
-}
-
 .title{
   font-size:24px;
   font-weight:bold;
@@ -133,6 +125,18 @@ button{
   color:#6b7280;
 }
 
+/* CONSEILLER MODE */
+#advisorBadge{
+  display:none;
+  background:#dcfce7;
+  color:#166534;
+  padding:8px;
+  border-radius:8px;
+  font-size:12px;
+  margin-bottom:10px;
+  border:1px solid #86efac;
+}
+
 /* RESULT */
 .company{
   padding:12px;
@@ -146,10 +150,6 @@ button{
   opacity:1;
   transform:translateY(0);
 }
-
-.best{color:#059669;font-weight:bold;}
-.medium{color:#d97706;font-weight:bold;}
-.low{color:#dc2626;font-weight:bold;}
 
 canvas{
   width:100% !important;
@@ -170,6 +170,8 @@ canvas{
 </header>
 
 <div class="container">
+
+<div id="advisorBadge">🛡️ Mode conseiller activé - accès professionnel</div>
 
 <div class="card">
 <h2>Profil utilisateur</h2>
@@ -197,7 +199,7 @@ canvas{
     Analyse des marchés sur 3 ans...
   </div>
   <div class="loader-sub">
-    Modélisation institutionnelle • données consolidées • risque ajusté
+    Données multi-assureurs • modélisation actuarielle • projection long terme
   </div>
 </div>
 
@@ -217,10 +219,13 @@ canvas{
 
 <script>
 
-/* MODE CONSEILLER */
+let advisorMode = false;
+
 function access(){
 let pass = prompt("Accès conseiller - mot de passe :");
 if(pass === "admin"){
+advisorMode = true;
+document.getElementById("advisorBadge").style.display="block";
 alert("Accès conseiller validé ✔");
 } else {
 alert("Accès refusé");
@@ -250,11 +255,11 @@ document.getElementById("advice").innerHTML="";
 const steps=[
 "Analyse des marchés sur 3 ans...",
 "Simulation multi-scénarios...",
-"Modélisation des flux financiers...",
-"Évaluation des frais...",
-"Optimisation des allocations...",
-"Scoring des assureurs...",
-"Finalisation..."
+"Modélisation actuarielle avancée...",
+"Analyse des frais et fiscalité...",
+"Comparaison des assureurs...",
+"Optimisation du portefeuille...",
+"Finalisation stratégique..."
 ];
 
 let loaderText=document.getElementById("loaderText");
@@ -263,7 +268,7 @@ let stepIndex=0;
 
 let interval=setInterval(()=>{
 
-progress += (100 / 900); // 1m30
+progress += (100 / 90); // 1m30
 
 if(progress>100) progress=100;
 
@@ -292,26 +297,26 @@ div.className="company";
 
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
-Score : ${c.score.toFixed(2)}
+Score global : ${c.score.toFixed(2)}<br>
+Rendement moyen : ${(c.yieldMin + c.yieldMax)/2}%
 `;
 
 document.getElementById("results").appendChild(div);
+
 setTimeout(()=>div.classList.add("show"),50);
 
 },i*120);
 
 });
 
-/* CONSEIL INTELLIGENT */
 setTimeout(()=>{
 
 let best = ranked[0];
-let msg = "Profil équilibré recommandé";
 
 document.getElementById("advice").innerHTML=
-`👉 Meilleur choix : <b>${best.name}</b><br>
-📊 ${msg}<br>
-💡 Stratégie : diversification + horizon long terme`;
+`👉 Solution recommandée : <b>${best.name}</b><br>
+📊 Analyse optimisée sur horizon long terme (profil ${advisorMode ? "conseiller" : "standard"})<br>
+💡 Allocation diversifiée conseillée pour stabilité et rendement`;
 
 },800);
 
@@ -321,11 +326,11 @@ document.getElementById("advice").innerHTML=
 
 }
 
-/* BUBBLES SIMPLE */
+/* BULLES */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
-let w=window.innerWidth,h=window.innerHeight;
+let w,h;
 
 function resize(){
 w=window.innerWidth;
@@ -334,7 +339,6 @@ canvas.width=w;
 canvas.height=h;
 }
 resize();
-
 window.addEventListener("resize",resize);
 
 let bubbles=[];
