@@ -38,8 +38,6 @@ header{
   color:white;
   padding:12px 25px;
   box-sizing:border-box;
-  position:relative;
-  z-index:2;
 }
 
 .topbar{
@@ -54,7 +52,6 @@ header{
   background:white;
   padding:4px 8px;
   border-radius:8px;
-  object-fit:contain;
 }
 
 .title{
@@ -70,52 +67,40 @@ header{
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
 
-input,select{
+input,select,button{
   width:100%;
   padding:10px;
   margin:6px 0;
-  border:1px solid #ccc;
   border-radius:6px;
-  box-sizing:border-box;
+  border:1px solid #ccc;
 }
 
 button{
-  width:100%;
-  padding:12px;
   background:#2563eb;
   color:white;
   border:none;
-  border-radius:6px;
   cursor:pointer;
-  font-size:16px;
 }
 
-/* LOADER */
-#loaderContainer{
-  display:none;
-  margin-top:15px;
+/* PROFILS */
+.profiles{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  margin-bottom:10px;
 }
 
-.loader-bg{
-  height:14px;
+.profile-btn{
+  padding:8px;
   background:#e5e7eb;
-  border-radius:30px;
-  overflow:hidden;
+  border:none;
+  cursor:pointer;
+  border-radius:6px;
 }
 
-#loaderBar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
-  transition:width 0.2s linear;
-  border-radius:30px;
-}
-
-.loader-text{
-  text-align:center;
-  font-size:13px;
-  margin-top:8px;
-  color:#374151;
+.profile-btn.active{
+  background:#2563eb;
+  color:white;
 }
 
 /* RESULT */
@@ -123,8 +108,8 @@ button{
   padding:12px;
   border-bottom:1px solid #eee;
   opacity:0;
-  transform:translateY(12px);
-  transition:0.4s ease;
+  transform:translateY(10px);
+  transition:0.4s;
 }
 
 .company.show{
@@ -135,15 +120,6 @@ button{
 .best{color:#059669;font-weight:bold;}
 .medium{color:#d97706;font-weight:bold;}
 .low{color:#dc2626;font-weight:bold;}
-
-.chart-box{
-  height:320px;
-}
-
-canvas{
-  width:100% !important;
-  height:100% !important;
-}
 </style>
 </head>
 
@@ -153,7 +129,6 @@ canvas{
 
 <header>
 <div class="topbar">
-<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
 <div class="title">Comparateur PER</div>
 </div>
 </header>
@@ -165,33 +140,18 @@ canvas{
 
 <input id="fullname" placeholder="Nom et prénom">
 
+<div class="profiles">
+<button class="profile-btn" onclick="setProfile('liberal')">Libéral</button>
+<button class="profile-btn" onclick="setProfile('salarié')">Salarié</button>
+<button class="profile-btn" onclick="setProfile('medecin')">Médecin</button>
+<button class="profile-btn" onclick="setProfile('paramedical')">Paramédical</button>
+</div>
+
 <select id="profession">
-
-<optgroup label="CARPIMKO">
 <option>Kinésithérapeute</option>
-<option>Orthophoniste</option>
-<option>Orthoptiste</option>
-<option>Podologue</option>
-</optgroup>
-
-<optgroup label="CIPAV - URSSAF">
 <option>Ostéopathe</option>
-<option>Psychomotricien</option>
-<option>Chiropracteur</option>
-<option>Psychologue</option>
-<option>Neuropsychologue</option>
-</optgroup>
-
-<optgroup label="CARCDSF">
+<option>Médecin</option>
 <option>Sage-femme</option>
-<option>Chirurgien-dentiste</option>
-</optgroup>
-
-<optgroup label="CARMF">
-<option>Médecin généraliste</option>
-<option>Médecin spécialiste</option>
-</optgroup>
-
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -199,16 +159,6 @@ canvas{
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="simulate()">Simuler</button>
-
-<div id="loaderContainer">
-  <div class="loader-bg">
-    <div id="loaderBar"></div>
-  </div>
-  <div id="loaderText" class="loader-text">
-    Analyse des marchés sur 3 ans...
-  </div>
-</div>
-
 </div>
 
 <div class="card">
@@ -217,13 +167,27 @@ canvas{
 </div>
 
 <div class="card">
-<h2>Graphique</h2>
-<div class="chart-box"><canvas id="chart"></canvas></div>
+<h2>Projection retraite</h2>
+<div id="retirement"></div>
+</div>
+
+<div class="card">
+<h2>Recommandation</h2>
+<div id="advice"></div>
 </div>
 
 </div>
 
 <script>
+
+/* PROFIL */
+let profile="liberal";
+
+function setProfile(p){
+profile=p;
+document.querySelectorAll(".profile-btn").forEach(b=>b.classList.remove("active"));
+event.target.classList.add("active");
+}
 
 /* DATA */
 const companies=[
@@ -242,45 +206,12 @@ return avg-(c.entry*0.55)-(c.exit*0.45);
 /* SIMULATION */
 function simulate(){
 
-document.getElementById("loaderContainer").style.display="block";
-document.getElementById("results").innerHTML="";
-
-const steps=[
-"Analyse des marchés sur 3 ans...",
-"Simulation des fluctuations obligataires...",
-"Étude des frais d’entrée...",
-"Projection des rendements nets...",
-"Comparaison des assureurs...",
-"Optimisation du classement...",
-"Finalisation..."
-];
-
-let loaderText=document.getElementById("loaderText");
-let progress=0;
-let stepIndex=0;
-
-let interval=setInterval(()=>{
-
-progress += (100 / 600); // 60 secondes
-
-if(progress>100) progress=100;
-
-document.getElementById("loaderBar").style.width=progress+"%";
-
-let newStep=Math.floor((progress/100)*steps.length);
-if(newStep !== stepIndex && newStep < steps.length){
-stepIndex=newStep;
-loaderText.innerText=steps[stepIndex];
-}
-
-if(progress>=100){
-clearInterval(interval);
-
-document.getElementById("loaderContainer").style.display="none";
-
-/* RESULT */
 let ranked=companies.map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
+
+document.getElementById("results").innerHTML="";
+document.getElementById("retirement").innerHTML="";
+document.getElementById("advice").innerHTML="";
 
 ranked.forEach((c,i)=>{
 
@@ -296,37 +227,84 @@ let yield=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
 Rendement : <span class="${yield}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
-Frais entrée : <span class="${entry}">${c.entry}%</span>
-| Sortie : <span class="${exit}">${c.exit}%</span><br>
-Score : ${c.score.toFixed(2)}
+Frais : <span class="${entry}">${c.entry}%</span>
 `;
 
 document.getElementById("results").appendChild(div);
 setTimeout(()=>div.classList.add("show"),50);
 
 },i*120);
-
 });
 
+/* RETRAITE */
 setTimeout(()=>{
 
-new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:ranked.map(c=>c.name),
-datasets:[
-{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"#22c55e"},
-{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"#ef4444"}
-]
-},
-options:{responsive:true,maintainAspectRatio:false}
-});
+const age=parseInt(document.getElementById("age").value||35);
+const monthly=parseFloat(document.getElementById("monthly").value||200);
 
-},400);
+const years=65-age;
+const avgYield=ranked.reduce((a,b)=>a+((b.yieldMin+b.yieldMax)/2),0)/ranked.length/100;
+
+let capital=0;
+for(let i=0;i<years;i++){
+capital=(capital+(monthly*12))*(1+avgYield);
+}
+
+const rente=capital*0.045/12;
+
+document.getElementById("retirement").innerHTML=
+`Capital : ${capital.toFixed(0)} €<br>Rente : ${rente.toFixed(0)} €/mois`;
+
+},800);
+
+/* CONSEIL */
+setTimeout(()=>{
+
+let best=ranked[0];
+
+document.getElementById("advice").innerHTML=
+`👉 Profil ${profile}<br>
+✔ Meilleur choix : <b>${best.name}</b>`;
+
+},900);
 
 }
-},50);
+
+/* BULLES */
+const canvas=document.getElementById("bubbleCanvas");
+const ctx=canvas.getContext("2d");
+
+let w=window.innerWidth,h=window.innerHeight;
+
+function resize(){
+w=window.innerWidth;
+h=window.innerHeight;
+canvas.width=w;
+canvas.height=h;
 }
+resize();
+window.addEventListener("resize",resize);
+
+let bubbles=[];
+for(let i=0;i<70;i++){
+bubbles.push({x:Math.random()*w,y:Math.random()*h,r:3+Math.random()*4,vy:0.3+Math.random()});
+}
+
+function animate(){
+ctx.clearRect(0,0,w,h);
+
+for(let b of bubbles){
+b.y-=b.vy;
+if(b.y<0){b.y=h;b.x=Math.random()*w;}
+ctx.beginPath();
+ctx.fillStyle="#60a5fa";
+ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+ctx.fill();
+}
+
+requestAnimationFrame(animate);
+}
+animate();
 
 </script>
 
