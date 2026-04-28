@@ -242,9 +242,22 @@ const companies = [
 { name:"Axa", entry:4.4, exit:2.5, yieldMin:2.9, yieldMax:3.5 }
 ];
 
-function score(c){
+// pondération métier
+const professionWeight = {
+"Médecin généraliste":1.3,
+"Spécialiste médical":1.3,
+"Chirurgien-dentiste":1.25,
+"Pharmacien":1.2,
+"Infirmier libéral":1.15,
+"Masseur-kinésithérapeute":1.1,
+"Ostéopathe":1.1,
+"Psychologue":1.05,
+"Neuropsychologue":1.05
+};
+
+function score(c, weight){
 const avg=(c.yieldMin+c.yieldMax)/2;
-return avg-(c.entry*0.55)-(c.exit*0.45);
+return (avg-(c.entry*0.55)-(c.exit*0.45)) * (weight||1);
 }
 
 function startLoading(){
@@ -262,15 +275,14 @@ const steps=[
 "Analyse du profil client...",
 "Étude des frais...",
 "Analyse des rendements...",
-"Comparaison des assureurs...",
-"Calcul du classement...",
+"Optimisation selon la profession...",
+"Calcul du capital projeté...",
 "Finalisation du rapport..."
 ];
 
 let i=0;
 
 let timer=setInterval(()=>{
-
 let progress=Math.min(((Date.now()-start)/duration)*100,100);
 bar.style.width=progress+"%";
 
@@ -294,19 +306,22 @@ document.getElementById("loaderBox").style.display="none";
 
 const fullname=document.getElementById("fullname").value||"";
 const profession=document.getElementById("profession").value||"";
-const age=document.getElementById("age").value||0;
-const income=document.getElementById("income").value||0;
-const monthly=document.getElementById("monthly").value||0;
+const age=parseInt(document.getElementById("age").value)||0;
+const income=parseFloat(document.getElementById("income").value)||0;
+const monthly=parseFloat(document.getElementById("monthly").value)||0;
 
-let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
+let weight=professionWeight[profession]||1;
+let years=65-age;
+
+let ranked=companies.map(c=>({...c,score:score(c,weight)})).sort((a,b)=>b.score-a.score);
 
 let html=`<div class="client-box">
 <strong>Client :</strong> ${fullname}<br>
 <strong>Profession :</strong> ${profession}<br>
 <strong>Âge :</strong> ${age} ans<br>
 <strong>Revenus :</strong> ${income} €<br>
-<strong>Versement mensuel :</strong> ${monthly} €
-</div>`;
+<strong>Versement mensuel :</strong> ${monthly} €<br>
+<strong>Projection retraite :</strong> ~${Math.round(monthly*12*years*1.35)} €</div>`;
 
 ranked.forEach((c,i)=>{
 
@@ -327,7 +342,6 @@ html+=`
 document.getElementById("results").innerHTML=html;
 
 const ctx=document.getElementById("chart");
-
 if(window.myChart) window.myChart.destroy();
 
 window.myChart=new Chart(ctx,{ 
