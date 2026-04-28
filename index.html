@@ -17,15 +17,12 @@
   --warning:#f59e0b;
   --danger:#dc2626;
   --bg:#f4f6f8;
-  --card:#ffffff;
-  --text:#0f172a;
 }
 
 body{
-  font-family:system-ui, Arial;
+  font-family:system-ui,Arial;
   margin:0;
   background:var(--bg);
-  color:var(--text);
 }
 
 header{
@@ -70,13 +67,11 @@ button{
 
 .company{padding:12px;border-bottom:1px solid #eee}
 .rank{font-weight:800}
-
 .best{color:var(--success);font-weight:700}
 .medium{color:var(--warning);font-weight:700}
 .low{color:var(--danger);font-weight:700}
 
-/* loader */
-.loader-box{display:none;text-align:center;margin-top:10px}
+.loader-box{text-align:center;display:none}
 .hourglass{
   width:40px;height:40px;margin:10px auto;
   border:4px solid var(--primary);
@@ -86,32 +81,13 @@ button{
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.progress{height:20px;background:#e5e7eb;border-radius:20px;overflow:hidden}
+.progress{height:18px;background:#e5e7eb;border-radius:20px;overflow:hidden}
 .bar{height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--accent),var(--success))}
 
-.kpi{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-.kpi div{
-  background:#f8fafc;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi div{background:#f8fafc;padding:10px;border-radius:10px;text-align:center}
 
-.reco{
-  background:#ecfeff;
-  padding:12px;
-  border-radius:12px;
-  border-left:5px solid var(--accent);
-}
-
-.fade{
-  animation:fade .4s ease-in;
-}
-@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+.reco{background:#ecfeff;padding:12px;border-radius:12px;border-left:5px solid var(--accent)}
 </style>
 </head>
 
@@ -137,6 +113,8 @@ button{
 <input id="income" type="number" placeholder="Revenus">
 <input id="age" type="number" placeholder="Âge">
 <input id="horizon" type="number" placeholder="Horizon (années)">
+<input id="monthly" type="number" placeholder="Versement mensuel (€)">
+
 <button onclick="start()">Analyser</button>
 
 <div class="loader-box" id="loader">
@@ -159,10 +137,6 @@ button{
 <div class="card">
 <h2>Projection retraite</h2>
 <div id="projection"></div>
-</div>
-
-<div class="card">
-<button onclick="exportPDF()">Télécharger rapport PDF</button>
 </div>
 
 </div>
@@ -189,14 +163,18 @@ function start(){
 document.getElementById("loader").style.display="block";
 let b=document.getElementById("bar");
 let t=document.getElementById("txt");
-let steps=["Profil...","Frais...","Rendements...","Optimisation...","Finalisation..."];
+let steps=["Profil...","Frais...","Rendement...","Optimisation...","Finalisation..."];
 let i=0,p=0;
 
+// loader fluide 60s
 let timer=setInterval(()=>{
-  p++;
+  p+=1.6; // ~60s total
+  if(p>100)p=100;
   b.style.width=p+"%";
-  if(p%20==0)t.innerText=steps[i++];
-  if(p>=100){clearInterval(timer);setTimeout(run,500)}
+
+  if(Math.floor(p)%20===0 && i<steps.length){t.innerText=steps[i++];}
+
+  if(p>=100){clearInterval(timer);setTimeout(run,400)}
 },600);
 }
 
@@ -207,52 +185,47 @@ document.getElementById("loader").style.display="none";
 let age=+document.getElementById("age").value;
 let income=+document.getElementById("income").value;
 let horizon=+document.getElementById("horizon").value;
+let monthly=+document.getElementById("monthly").value;
 
 let ranked=data.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
 
-// KPI
 let best=ranked[0];
+
 document.getElementById("kpi").innerHTML=`
 <div class='kpi'>
-<div><b>Score global</b><br>${best.score.toFixed(1)}/10</div>
+<div><b>Score</b><br>${best.score.toFixed(1)}/10</div>
 <div><b>Top PER</b><br>${best.name}</div>
-<div><b>Potentiel</b><br>Optimisation élevée</div>
+<div><b>Profil</b><br>Optimisation active</div>
 </div>`;
 
-// ranking
 let html="";
 ranked.forEach((c,i)=>{
 let r=(c.y1+c.y2)/2;
-html+=`<div class='company fade'>
+html+=`<div class='company'>
 <div class='rank'>${i+1}. ${c.name}</div>
 <div>Rendement: <span style='color:${color(r)}'>${c.y1}% → ${c.y2}%</span></div>
 <div>Frais: ${c.entry}% / ${c.exit}%</div>
 <div>Score: ${c.score.toFixed(2)}</div>
-</div>`
+</div>`;
 });
+
 document.getElementById("results").innerHTML=html;
 
-// projection simple
-let monthly=500;
-let years=20;
-let capital=Math.round(monthly*12*years*1.8);
+// projection capital
+let years=horizon||20;
+let r=0.06;
+let capital=monthly*12*((Math.pow(1+r,years)-1)/r);
+
+let final=capital.toFixed(0);
 
 document.getElementById("projection").innerHTML=`
 <div class='reco'>
 <b>Projection retraite</b><br>
-Versement: 500€/mois<br>
-Capital estimé: ${capital.toLocaleString()}€
+Versement: ${monthly}€/mois<br>
+Horizon: ${years} ans<br>
+Capital estimé: ${Number(final).toLocaleString()}€
 </div>`;
 
-}
-
-function exportPDF(){
-const { jsPDF } = window.jspdf;
-let doc=new jsPDF();
-
-doc.text("Rapport PER - CGP",10,10);
-doc.text(document.getElementById("results").innerText,10,20);
-doc.save("rapport.pdf");
 }
 
 </script>
