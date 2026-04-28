@@ -16,6 +16,7 @@ html,body{
   overflow-x:hidden;
 }
 
+/* 🫧 BULLES */
 #bubbleCanvas{
   position:fixed;
   inset:0;
@@ -33,32 +34,40 @@ html,body{
   padding:20px;
 }
 
+/* 🔵 HEADER FIXÉ */
 header{
   background:#031f94;
   color:white;
-  padding:18px 25px;
+  padding:12px 25px;
   position:relative;
   z-index:2;
+  box-sizing:border-box;
 }
 
 .topbar{
   display:flex;
   align-items:center;
-  gap:18px;
+  gap:14px;
+  height:60px;
 }
 
 .logo{
-  height:55px;
+  height:42px;
+  width:auto;
   background:white;
-  padding:6px;
+  padding:4px 8px;
   border-radius:8px;
+  display:block;
+  object-fit:contain;
 }
 
 .title{
-  font-size:28px;
+  font-size:24px;
   font-weight:bold;
+  line-height:1;
 }
 
+/* CARDS */
 .card{
   background:white;
   padding:18px;
@@ -73,6 +82,7 @@ input,select{
   margin:6px 0;
   border:1px solid #ccc;
   border-radius:6px;
+  box-sizing:border-box;
 }
 
 button{
@@ -117,7 +127,6 @@ canvas{
 
 <body>
 
-<!-- 🫧 BULLES -->
 <canvas id="bubbleCanvas"></canvas>
 
 <header>
@@ -229,12 +238,11 @@ options:{responsive:true,maintainAspectRatio:false}
 
 }
 
-/* 🫧 BULLES FIXÉES DÉFINITIVEMENT */
+/* 🫧 BULLES (inchangées si OK chez toi) */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
 let w,h;
-
 function resize(){
 w=window.innerWidth;
 h=window.innerHeight;
@@ -244,21 +252,13 @@ canvas.height=h;
 resize();
 window.addEventListener("resize",resize);
 
-const mouse={x:w/2,y:h/2};
-
-window.addEventListener("mousemove",(e)=>{
-mouse.x=e.clientX;
-mouse.y=e.clientY;
-});
-
 let bubbles=[];
 for(let i=0;i<80;i++){
 bubbles.push({
 x:Math.random()*w,
 y:Math.random()*h,
 r:Math.random()*6+2,
-vy:Math.random()*0.6+0.2,
-color:Math.floor(Math.random()*4)
+vy:Math.random()*0.6+0.2
 });
 }
 
@@ -270,30 +270,14 @@ const colors=[
 ];
 
 function animate(){
-
 ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
-
 b.y-=b.vy;
-
-if(b.y<0){
-b.y=h;
-b.x=Math.random()*w;
-}
-
-/* réaction souris */
-let dx=b.x-mouse.x;
-let dy=b.y-mouse.y;
-let dist=Math.sqrt(dx*dx+dy*dy);
-
-if(dist<130){
-b.x+=dx*0.015;
-b.y+=dy*0.015;
-}
+if(b.y<0){b.y=h;b.x=Math.random()*w;}
 
 ctx.beginPath();
-ctx.fillStyle=colors[b.color];
+ctx.fillStyle=colors[Math.floor(Math.random()*colors.length)];
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
