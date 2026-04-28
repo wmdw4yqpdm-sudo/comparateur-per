@@ -50,6 +50,9 @@ header{
   margin-bottom:20px;
   border-radius:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  transform-style:preserve-3d;
+  transition:transform 0.15s ease, box-shadow 0.2s ease;
+  will-change: transform;
 }
 
 input, select{
@@ -79,6 +82,8 @@ button:hover{
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
+  transform-style:preserve-3d;
+  transition:transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .rank{
@@ -103,18 +108,30 @@ button:hover{
   margin-top:20px;
 }
 
-.progress{
-  width:100%;
-  height:24px;
-  background:#e5e7eb;
-  border-radius:20px;
-  overflow:hidden;
+.loader-core{
+  width:70px;
+  height:70px;
+  margin:10px auto;
+  position:relative;
 }
 
-.bar{
-  width:0%;
+.loader-ring{
+  width:100%;
   height:100%;
-  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
+  border-radius:50%;
+  border:3px solid rgba(37,99,235,0.2);
+  border-top:3px solid #2563eb;
+  animation:spin 1s linear infinite;
+}
+
+.loader-center{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-weight:bold;
+  font-size:12px;
+  color:#031f94;
 }
 
 .loading-text{
@@ -124,20 +141,16 @@ button:hover{
   color:#031f94;
 }
 
-.hourglass{
-  width:45px;
-  height:45px;
-  margin:10px auto;
-  border:4px solid #2563eb;
-  border-top:4px solid transparent;
-  border-bottom:4px solid transparent;
-  border-radius:50%;
-  animation:spin3d 1s linear infinite;
+.loading-sub{
+  text-align:center;
+  margin-top:6px;
+  font-size:13px;
+  color:#6b7280;
 }
 
-@keyframes spin3d{
-  0%{transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg);}
-  100%{transform:rotateX(360deg) rotateY(360deg) rotateZ(360deg);}
+@keyframes spin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
 }
 
 .reco{
@@ -150,7 +163,6 @@ button:hover{
   color:#065f46;
 }
 
-/* ANIMATION SCROLL */
 .reveal{
   opacity:0;
   transform:translateY(25px);
@@ -183,43 +195,15 @@ button:hover{
 
 <select id="profession">
 <option value="">Sélectionnez une profession</option>
-
-<optgroup label="CARPIMKO">
 <option>Infirmier libéral</option>
 <option>Masseur-kinésithérapeute</option>
 <option>Orthophoniste</option>
-<option>Orthoptiste</option>
-</optgroup>
-
-<optgroup label="CIPAV">
 <option>Architecte</option>
 <option>Consultant</option>
-<option>Coach</option>
 <option>Ostéopathe</option>
-<option>Psychomotricien</option>
-<option>Chiropracteur</option>
 <option>Psychologue</option>
-<option>Neuropsychologue</option>
-<option>Profession libérale diversifiée</option>
-</optgroup>
-
-<optgroup label="URSSAF">
-<option>Auto-entrepreneur</option>
-<option>Freelance</option>
-<option>Indépendant</option>
-</optgroup>
-
-<optgroup label="CARCDSF">
 <option>Chirurgien-dentiste</option>
-<option>Pharmacien</option>
-<option>Sage-femme</option>
-</optgroup>
-
-<optgroup label="CARMF">
-<option>Médecin généraliste</option>
-<option>Spécialiste médical</option>
-</optgroup>
-
+<option>Médecin</option>
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -229,15 +213,12 @@ button:hover{
 <button onclick="startLoading()">Simuler</button>
 
 <div class="loader-box" id="loaderBox">
-
-<div class="hourglass"></div>
-
-<div class="progress">
-<div class="bar" id="bar"></div>
+<div class="loader-core">
+  <div class="loader-ring"></div>
+  <div class="loader-center">CGP</div>
 </div>
-
-<div class="loading-text" id="loadingText">Analyse du profil client...</div>
-
+<div class="loading-text" id="loadingText">Analyse du profil patrimonial...</div>
+<div class="loading-sub" id="loadingSub">Initialisation...</div>
 </div>
 
 </div>
@@ -257,12 +238,12 @@ button:hover{
 
 <script>
 
-const companies = [
-{ name:"Generali", entry:0.95, exit:0, yieldMin:5.77, yieldMax:8.70 },
-{ name:"Groupama", entry:1.8, exit:1, yieldMin:4.3, yieldMax:5.2 },
-{ name:"MMA", entry:2.6, exit:1.4, yieldMin:3.6, yieldMax:4.2 },
-{ name:"April", entry:3.2, exit:2, yieldMin:3.1, yieldMax:3.8 },
-{ name:"Axa", entry:4.4, exit:2.5, yieldMin:2.9, yieldMax:3.5 }
+const companies=[
+{name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
+{name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
+{name:"MMA",entry:2.6,exit:1.4,yieldMin:3.6,yieldMax:4.2},
+{name:"April",entry:3.2,exit:2,yieldMin:3.1,yieldMax:3.8},
+{name:"Axa",entry:4.4,exit:2.5,yieldMin:2.9,yieldMax:3.5}
 ];
 
 function score(c){
@@ -272,53 +253,38 @@ return avg-(c.entry*0.55)-(c.exit*0.45);
 
 function startLoading(){
 const loader=document.getElementById("loaderBox");
-const bar=document.getElementById("bar");
 const txt=document.getElementById("loadingText");
-
+const sub=document.getElementById("loadingSub");
 loader.style.display="block";
 
 let start=Date.now();
 let duration=60000;
 
 const steps=[
-"Analyse du profil client...",
-"Étude des frais...",
-"Analyse des rendements...",
-"Optimisation du scénario...",
-"Projection retraite...",
-"Finalisation du rapport..."
+"Analyse du profil...",
+"Analyse frais...",
+"Analyse rendement...",
+"Comparaison assureurs...",
+"Optimisation stratégie...",
+"Finalisation rapport..."
 ];
 
 let i=0;
 
 let timer=setInterval(()=>{
 let progress=Math.min(((Date.now()-start)/duration)*100,100);
-bar.style.width=progress+"%";
 
 let stepIndex=Math.floor((progress/100)*steps.length);
 if(stepIndex!==i && stepIndex<steps.length){
   i=stepIndex;
-  txt.innerHTML="⏳ "+steps[i];
+  txt.innerHTML="🧠 "+steps[i];
 }
+
+sub.innerHTML="Traitement en cours...";
 
 if(progress>=100){clearInterval(timer);setTimeout(simulate,300);}
 },100);
 }
-
-function revealOnScroll(){
-const observer=new IntersectionObserver((entries)=>{
-entries.forEach(entry=>{
-if(entry.isIntersecting){entry.target.classList.add("active");}
-});
-},{threshold:0.15});
-
-document.querySelectorAll(".card, .company, .client-box, .reco").forEach(el=>{
-el.classList.add("reveal");
-observer.observe(el);
-});
-}
-
-window.addEventListener("load",revealOnScroll);
 
 function simulate(){
 
@@ -330,10 +296,7 @@ const age=parseInt(document.getElementById("age").value)||0;
 const income=parseFloat(document.getElementById("income").value)||0;
 const monthly=parseFloat(document.getElementById("monthly").value)||0;
 
-let years=Math.max(65-age,0);
-
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
-
 let best=ranked[0];
 
 let html=`<div class="client-box">
@@ -346,37 +309,54 @@ let html=`<div class="client-box">
 
 ranked.forEach((c,i)=>{
 let badge=c.score>5?"best":c.score>3.5?"medium":"low";
-html+=`
-<div class="company">
+html+=`<div class="company">
 <div class="rank">${i+1}. ${c.name}</div>
-<div>Rendement 3 ans : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span></div>
+<div>Rendement : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span></div>
 <div>Frais entrée : <span class="${c.entry<2?'best':c.entry<3.5?'medium':'low'}">${c.entry}%</span> | Sortie : <span class="${c.exit<1?'best':c.exit<2?'medium':'low'}">${c.exit}%</span></div>
 <div>Score : ${c.score.toFixed(2)}</div>
 </div>`;
 });
 
 document.getElementById("results").innerHTML=html;
-
 document.getElementById("recoBox").innerHTML=`<div class="reco">🥇 Recommandation : ${best.name}</div>`;
 
 const ctx=document.getElementById("chart");
 if(window.myChart) window.myChart.destroy();
 
-window.myChart=new Chart(ctx,{ 
-  type:"bar",
-  data:{
-    labels:ranked.map(c=>c.name),
-    datasets:[
-      {label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},
-      {label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},
-      {label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}
-    ]
-  },
-  options:{responsive:true,scales:{y:{beginAtZero:true}}}
-});
+window.myChart=new Chart(ctx,{type:"bar",data:{labels:ranked.map(c=>c.name),datasets:[{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
 
-setTimeout(revealOnScroll,50);
+setTimeout(enableTilt,100);
+setTimeout(revealOnScroll,100);
 }
+
+function revealOnScroll(){
+const observer=new IntersectionObserver((entries)=>{
+entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add("active");});
+},{threshold:0.15});
+
+document.querySelectorAll(".card,.company,.client-box,.reco").forEach(el=>{
+el.classList.add("reveal");observer.observe(el);
+});
+}
+
+function enableTilt(){
+const cards=document.querySelectorAll(".card,.company");
+cards.forEach(card=>{
+card.addEventListener("mousemove",(e)=>{
+const r=card.getBoundingClientRect();
+const x=e.clientX-r.left;
+const y=e.clientY-r.top;
+const rx=((y-r.height/2)/(r.height/2))*-6;
+const ry=((x-r.width/2)/(r.width/2))*6;
+card.style.transform=`perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
+});
+card.addEventListener("mouseleave",()=>{
+card.style.transform="perspective(1000px) rotateX(0) rotateY(0) scale(1)";
+});
+});
+}
+
+window.addEventListener("load",revealOnScroll);
 
 </script>
 
