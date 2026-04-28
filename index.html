@@ -234,7 +234,7 @@ options:{responsive:true,maintainAspectRatio:false}
 
 }
 
-/* 🫧 BULLES FIX DEFINITIF (STABLE + SANS BUG) */
+/* 🫧 BULLES AVEC RÉACTION SOURIS */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -249,6 +249,14 @@ canvas.height=h;
 }
 resize();
 window.addEventListener("resize",resize);
+
+/* souris */
+const mouse={x:w/2,y:h/2};
+
+window.addEventListener("mousemove",(e)=>{
+mouse.x=e.clientX;
+mouse.y=e.clientY;
+});
 
 let bubbles=[];
 
@@ -266,13 +274,13 @@ vy:Math.random()*0.5+0.2
 createBubbles();
 window.addEventListener("resize",createBubbles);
 
-/* couleurs FIXES ultra stables */
 const colors=["#2563eb","#06b6d4","#22c55e","#94a3b8"];
 
 function animate(){
 ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
+
 b.y-=b.vy;
 
 if(b.y<0){
@@ -280,8 +288,15 @@ b.y=h;
 b.x=Math.random()*w;
 }
 
+/* 💫 réaction souris */
+let dx=(mouse.x-b.x)*0.002;
+let dy=(mouse.y-b.y)*0.002;
+
+b.x+=dx;
+b.y+=dy;
+
 ctx.beginPath();
-ctx.fillStyle=colors[Math.floor(b.x % colors.length)];
+ctx.fillStyle=colors[Math.floor(b.x%colors.length)];
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
