@@ -90,34 +90,6 @@ button{
   font-size:16px;
 }
 
-/* LOADER */
-#loaderContainer{
-  display:none;
-  margin-top:12px;
-}
-
-.loader-bg{
-  height:12px;
-  background:#e5e7eb;
-  border-radius:20px;
-  overflow:hidden;
-}
-
-#loaderBar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#2563eb,#06b6d4);
-  transition:width 0.25s ease;
-}
-
-.loader-text{
-  text-align:center;
-  font-size:13px;
-  margin-top:8px;
-  color:#6b7280;
-}
-
-/* RESULT */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -198,16 +170,6 @@ canvas{
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="simulate()">Simuler</button>
-
-<div id="loaderContainer">
-  <div class="loader-bg">
-    <div id="loaderBar"></div>
-  </div>
-  <div id="loaderText" class="loader-text">
-    Initialisation de l’analyse...
-  </div>
-</div>
-
 </div>
 
 <div class="card">
@@ -218,6 +180,12 @@ canvas{
 <div class="card">
 <h2>Graphique</h2>
 <div class="chart-box"><canvas id="chart"></canvas></div>
+</div>
+
+<!-- 🔥 AJOUT RETRAITE -->
+<div class="card">
+<h2>Projection retraite</h2>
+<div id="retirement"></div>
 </div>
 
 </div>
@@ -241,48 +209,11 @@ return avg-(c.entry*0.55)-(c.exit*0.45);
 /* SIMULATION */
 function simulate(){
 
-document.getElementById("loaderContainer").style.display="block";
-document.getElementById("results").innerHTML="";
-
-const steps=[
-"Initialisation des données financières...",
-"Connexion aux assureurs...",
-"Analyse des frais...",
-"Évaluation des rendements...",
-"Simulation des scénarios...",
-"Optimisation du classement...",
-"Finalisation..."
-];
-
-let loaderText=document.getElementById("loaderText");
-let progress=0;
-let stepIndex=0;
-
-let interval=setInterval(()=>{
-
-progress += 0.28; // ≈ 60 secondes
-if(progress>100) progress=100;
-
-document.getElementById("loaderBar").style.width=progress+"%";
-
-let newStep=Math.floor((progress/100)*steps.length);
-if(newStep !== stepIndex && newStep < steps.length){
-stepIndex=newStep;
-loaderText.innerText=steps[stepIndex];
-}
-
-if(progress>=100){
-clearInterval(interval);
-
-setTimeout(()=>{
-
-document.getElementById("loaderContainer").style.display="none";
-
-/* RESULT */
 let ranked=companies.map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
 
 document.getElementById("results").innerHTML="";
+document.getElementById("retirement").innerHTML="";
 
 ranked.forEach((c,i)=>{
 
@@ -307,9 +238,9 @@ document.getElementById("results").appendChild(div);
 setTimeout(()=>div.classList.add("show"),50);
 
 },i*120);
-
 });
 
+/* CHART */
 setTimeout(()=>{
 
 new Chart(document.getElementById("chart"),{
@@ -326,13 +257,36 @@ options:{responsive:true,maintainAspectRatio:false}
 
 },400);
 
-},200);
+/* 🔥 PROJECTION RETRAITE */
+setTimeout(()=>{
+
+const age=parseInt(document.getElementById("age").value||35);
+const monthly=parseFloat(document.getElementById("monthly").value||200);
+
+const retirementAge=65;
+const years=retirementAge-age;
+
+const avgYield = ranked.reduce((a,b)=>a+((b.yieldMin+b.yieldMax)/2),0)/ranked.length/100;
+
+let capital=0;
+
+for(let i=0;i<years;i++){
+capital=(capital+(monthly*12))*(1+avgYield);
+}
+
+const rente=capital*0.045/12;
+
+document.getElementById("retirement").innerHTML=`
+<strong>Âge de départ :</strong> ${retirementAge} ans<br>
+<strong>Capital estimé :</strong> ${capital.toFixed(0)} €<br>
+<strong>Rente mensuelle :</strong> ${rente.toFixed(0)} € / mois
+`;
+
+},900);
 
 }
-},200);
-}
 
-/* 🫧 BULLES (inchangé) */
+/* 🫧 BULLES */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
