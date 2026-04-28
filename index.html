@@ -16,7 +16,6 @@ html,body{
   overflow-x:hidden;
 }
 
-/* 🫧 CANVAS BULLES */
 #bubbleCanvas{
   position:fixed;
   inset:0;
@@ -26,7 +25,6 @@ html,body{
   pointer-events:none;
 }
 
-/* CONTENU AU-DESSUS */
 .container{
   position:relative;
   z-index:2;
@@ -35,7 +33,6 @@ html,body{
   padding:20px;
 }
 
-/* HEADER */
 header{
   background:#031f94;
   color:white;
@@ -62,7 +59,6 @@ header{
   font-weight:bold;
 }
 
-/* CARDS */
 .card{
   background:white;
   padding:18px;
@@ -104,7 +100,6 @@ button{
   transform:translateY(0);
 }
 
-/* COLORS */
 .best{color:#059669;font-weight:bold;}
 .medium{color:#d97706;font-weight:bold;}
 .low{color:#dc2626;font-weight:bold;}
@@ -152,7 +147,6 @@ canvas{
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="simulate()">Simuler</button>
-
 </div>
 
 <div class="card">
@@ -235,7 +229,7 @@ options:{responsive:true,maintainAspectRatio:false}
 
 }
 
-/* 🫧 BULLES ULTRA FIABLE */
+/* 🫧 BULLES FIXÉES DÉFINITIVEMENT */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -244,12 +238,18 @@ let w,h;
 function resize(){
 w=window.innerWidth;
 h=window.innerHeight;
-
 canvas.width=w;
 canvas.height=h;
 }
 resize();
 window.addEventListener("resize",resize);
+
+const mouse={x:w/2,y:h/2};
+
+window.addEventListener("mousemove",(e)=>{
+mouse.x=e.clientX;
+mouse.y=e.clientY;
+});
 
 let bubbles=[];
 for(let i=0;i<80;i++){
@@ -257,7 +257,8 @@ bubbles.push({
 x:Math.random()*w,
 y:Math.random()*h,
 r:Math.random()*6+2,
-v:Math.random()*0.6+0.2
+vy:Math.random()*0.6+0.2,
+color:Math.floor(Math.random()*4)
 });
 }
 
@@ -269,18 +270,30 @@ const colors=[
 ];
 
 function animate(){
+
 ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
 
-b.y-=b.v;
+b.y-=b.vy;
+
 if(b.y<0){
 b.y=h;
 b.x=Math.random()*w;
 }
 
+/* réaction souris */
+let dx=b.x-mouse.x;
+let dy=b.y-mouse.y;
+let dist=Math.sqrt(dx*dx+dy*dy);
+
+if(dist<130){
+b.x+=dx*0.015;
+b.y+=dy*0.015;
+}
+
 ctx.beginPath();
-ctx.fillStyle=colors[Math.floor(Math.random()*colors.length)];
+ctx.fillStyle=colors[b.color];
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
