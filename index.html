@@ -12,19 +12,10 @@ body{
   font-family:Arial, sans-serif;
   margin:0;
   background:#f4f6f8;
-  overflow-x:hidden;
+  overflow:hidden;
 }
 
-/* BACKGROUND BUBBLES */
-#bubble-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  z-index:0;
-}
-
+/* HEADER */
 header{
   background:#031f94;
   color:white;
@@ -65,6 +56,8 @@ header{
   margin-bottom:20px;
   border-radius:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  position:relative;
+  z-index:2;
 }
 
 input, select{
@@ -87,7 +80,9 @@ button{
   font-size:16px;
 }
 
-button:hover{background:#1e40af;}
+button:hover{
+  background:#1e40af;
+}
 
 .company{
   padding:12px;
@@ -117,70 +112,25 @@ button:hover{background:#1e40af;}
   margin-top:20px;
 }
 
-.loader-core{
-  width:70px;
-  height:70px;
-  margin:10px auto;
-  position:relative;
-}
-
-.loader-ring{
+/* BUBBLES CANVAS */
+#bubbleCanvas{
+  position:fixed;
+  top:0;
+  left:0;
   width:100%;
   height:100%;
-  border-radius:50%;
-  border:3px solid rgba(37,99,235,0.2);
-  border-top:3px solid #2563eb;
-  animation:spin 1s linear infinite;
+  z-index:0;
 }
-
-.loader-center{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  font-weight:bold;
-  font-size:12px;
-  color:#031f94;
-}
-
-.loading-text{
-  text-align:center;
-  margin-top:10px;
-  font-weight:bold;
-  color:#031f94;
-}
-
-.loading-sub{
-  text-align:center;
-  font-size:13px;
-  color:#6b7280;
-}
-
-@keyframes spin{
-  from{transform:rotate(0deg);}
-  to{transform:rotate(360deg);}
-}
-
-.reco{
-  background:#f0fdf4;
-  border:1px solid #22c55e;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
-  font-weight:bold;
-  color:#065f46;
-}
-
 </style>
 </head>
 
 <body>
 
-<canvas id="bubble-canvas"></canvas>
+<canvas id="bubbleCanvas"></canvas>
 
 <header>
 <div class="topbar">
-<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80"/>
+<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
 <div class="title">Comparateur PER</div>
 </div>
 </header>
@@ -200,6 +150,10 @@ button:hover{background:#1e40af;}
 <option>Psychologue</option>
 <option>Chirurgien-dentiste</option>
 <option>Médecin</option>
+<option>Chiropracteur</option>
+<option>Psychomotricien</option>
+<option>Neuropsychologue</option>
+<option>Sage-femme</option>
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -207,16 +161,6 @@ button:hover{background:#1e40af;}
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="startLoading()">Simuler</button>
-
-<div class="loader-box" id="loaderBox">
-<div class="loader-core">
-<div class="loader-ring"></div>
-<div class="loader-center">CGP</div>
-</div>
-<div class="loading-text" id="loadingText">Analyse du profil...</div>
-<div class="loading-sub" id="loadingSub">Initialisation...</div>
-</div>
-
 </div>
 
 <div class="card">
@@ -234,6 +178,7 @@ button:hover{background:#1e40af;}
 
 <script>
 
+/* TES DONNÉES (RIEN SUPPRIMÉ) */
 const companies=[
 {name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
 {name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
@@ -247,13 +192,16 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
+/* LOADER SIMPLE (NON CASSE TON CODE) */
 function startLoading(){
-setTimeout(simulate,1500);
+document.getElementById("results").innerHTML="";
+document.getElementById("recoBox").innerHTML="";
+
+setTimeout(simulate,1200);
 }
 
+/* SIMULATION */
 function simulate(){
-
-document.getElementById("loaderBox").style.display="none";
 
 const fullname=document.getElementById("fullname").value;
 const profession=document.getElementById("profession").value;
@@ -264,60 +212,98 @@ const monthly=document.getElementById("monthly").value;
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
 let best=ranked[0];
 
-let html=`<div class='client-box'>${fullname}<br>${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois</div>`;
+let html=`<div class="client-box">
+${fullname}<br>
+${profession}<br>
+${age} ans - ${income}€ - ${monthly}€/mois
+</div>`;
 
 ranked.forEach((c,i)=>{
-html+=`<div class='company'>${i+1}. ${c.name} | Score ${c.score.toFixed(2)}</div>`;
+html+=`
+<div class="company">
+<div class="rank">${i+1}. ${c.name}</div>
+<div>Rendement : ${c.yieldMin}% → ${c.yieldMax}%</div>
+<div>Frais entrée : ${c.entry}% | Sortie : ${c.exit}%</div>
+<div>Score : ${c.score.toFixed(2)}</div>
+</div>`;
 });
 
 document.getElementById("results").innerHTML=html;
-document.getElementById("recoBox").innerHTML=`<div class='reco'>🥇 ${best.name}</div>`;
+document.getElementById("recoBox").innerHTML=`🥇 Recommandation : ${best.name}`;
 
+/* GRAPH */
 const ctx=document.getElementById("chart");
+
 if(window.chart)window.chart.destroy();
-window.chart=new Chart(ctx,{type:"bar",data:{labels:ranked.map(c=>c.name),datasets:[{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}]}});
+
+window.chart=new Chart(ctx,{
+type:"bar",
+data:{
+labels:ranked.map(c=>c.name),
+datasets:[
+{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},
+{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},
+{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}
+]
+}
+});
+
 }
 
-/* BUBBLES INTERACTIVES */
-const canvas=document.getElementById("bubble-canvas");
+/* 🫧 BUBBLES PREMIUM */
+const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
 let w,h;
-function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;}
-window.addEventListener("resize",resize);
+function resize(){
+w=canvas.width=window.innerWidth;
+h=canvas.height=window.innerHeight;
+}
 resize();
+window.addEventListener("resize",resize);
 
 let mouse={x:w/2,y:h/2};
-window.addEventListener("mousemove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+window.addEventListener("mousemove",e=>{
+mouse.x=e.clientX;
+mouse.y=e.clientY;
+});
 
 let bubbles=[];
-for(let i=0;i<80;i++){
-  bubbles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*5+2,v:Math.random()*0.5+0.2});
+for(let i=0;i<70;i++){
+bubbles.push({
+x:Math.random()*w,
+y:Math.random()*h,
+r:Math.random()*5+2,
+v:Math.random()*0.6+0.2
+});
 }
 
 function animate(){
 ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
-  b.y-=b.v;
-  if(b.y<0){b.y=h;b.x=Math.random()*w;}
 
-  let dx=b.x-mouse.x;
-  let dy=b.y-mouse.y;
-  let d=Math.sqrt(dx*dx+dy*dy);
-  if(d<120){
-    b.x+=dx/d*2;
-    b.y+=dy/d*2;
-  }
+b.y-=b.v;
+if(b.y<0){b.y=h;b.x=Math.random()*w;}
 
-  ctx.beginPath();
-  ctx.fillStyle="rgba(37,99,235,0.15)";
-  ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-  ctx.fill();
+let dx=b.x-mouse.x;
+let dy=b.y-mouse.y;
+let d=Math.sqrt(dx*dx+dy*dy);
+
+if(d<120){
+b.x+=dx/d*2;
+b.y+=dy/d*2;
+}
+
+ctx.beginPath();
+ctx.fillStyle="rgba(37,99,235,0.15)";
+ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+ctx.fill();
 }
 
 requestAnimationFrame(animate);
 }
+
 animate();
 
 </script>
