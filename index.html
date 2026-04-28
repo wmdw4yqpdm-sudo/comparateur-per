@@ -84,6 +84,11 @@ button{
   cursor:pointer;
 }
 
+button:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
 #loaderContainer{display:none;margin-top:15px;}
 
 .loader-bg{
@@ -153,7 +158,6 @@ canvas{
 <h2>Profil utilisateur</h2>
 
 <input id="fullname" placeholder="Nom et prénom">
-
 <select id="profession">
 <option>Kinésithérapeute</option>
 <option>Ostéopathe</option>
@@ -165,7 +169,15 @@ canvas{
 <input id="income" type="number" placeholder="Revenus annuels">
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
-<button onclick="simulate()">Lancer l’analyse</button>
+<button id="btnSimulate" onclick="simulate()">Lancer l’analyse</button>
+
+<div id="statusText" style="margin-top:10px;font-size:13px;color:#555;"></div>
+
+<select id="sortMode" onchange="resort()" style="margin-top:10px;">
+  <option value="balanced">Tri : équilibré</option>
+  <option value="yield">Tri : rendement</option>
+  <option value="fees">Tri : frais</option>
+</select>
 
 <div id="loaderContainer">
   <div class="loader-bg">
@@ -207,6 +219,21 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
+/* LOCAL STORAGE */
+window.addEventListener("load", () => {
+  ["fullname","profession","age","income","monthly"].forEach(id=>{
+    let v=localStorage.getItem(id);
+    if(v) document.getElementById(id).value=v;
+  });
+});
+
+function saveInputs(){
+  ["fullname","profession","age","income","monthly"].forEach(id=>{
+    localStorage.setItem(id,document.getElementById(id).value);
+  });
+}
+
+/* CHART */
 function renderChart(ranked){
 new Chart(document.getElementById("chart"),{
 type:"bar",
@@ -218,65 +245,108 @@ datasets:[
 {label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"#f97316"}
 ]
 },
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
+options:{responsive:true,maintainAspectRatio:false}
 });
 }
 
-function simulate(){
+/* RESORT */
+function resort(){
 
-document.getElementById("loaderContainer").style.display="block";
-document.getElementById("results").innerHTML="";
+let mode=document.getElementById("sortMode").value;
 
-const steps=[
-"Accès sécurisé au comparateur privé...",
-"Vérification des accès partenaires agréés...",
-"Chargement des grilles exclusives assureurs...",
-"Simulation des conditions de marché en environnement privé...",
-"Analyse des frais réels négociés...",
-"Croisement des données confidentielles partenaires...",
-"Finalisation de votre sélection personnalisée..."
-];
+let ranked=companies.map(c=>({...c,score:score(c)}));
 
-let progress=0;
-let stepIndex=0;
-
-let loaderText=document.getElementById("loaderText");
-
-let interval=setInterval(()=>{
-
-progress += (100/900);
-document.getElementById("loaderBar").style.width=progress+"%";
-
-let newStep=Math.floor((progress/100)*steps.length);
-if(newStep!==stepIndex && newStep<steps.length){
-stepIndex=newStep;
-loaderText.innerText=steps[stepIndex];
+if(mode==="yield"){
+ranked.sort((a,b)=>b.yieldMax-a.yieldMax);
+}else if(mode==="fees"){
+ranked.sort((a,b)=>(a.entry+a.exit)-(b.entry+b.exit));
+}else{
+ranked.sort((a,b)=>b.score-a.score);
 }
 
-if(progress>=100){
-clearInterval(interval);
-
-document.getElementById("loaderContainer").style.display="none";
-
-let ranked=companies.map(c=>({...c,score:score(c)}))
-.sort((a,b)=>b.score-a.score);
+document.getElementById("results").innerHTML="";
 
 ranked.forEach((c,i)=>{
-setTimeout(()=>{
 
 let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
 let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
-let yield=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
+let y=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
 
 let div=document.createElement("div");
 div.className="company";
 
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
-Rendement : <span class="${yield}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
+Score global : <strong>${c.score.toFixed(2)}</strong><br>
+Rendement : <span class="${y}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
+Frais entrée : <span class="${entry}">${c.entry}%</span><br>
+Frais sortie : <span class="${exit}">${c.exit}%</span>
+`;
+
+document.getElementById("results").appendChild(div);
+setTimeout(()=>div.classList.add("show"),50);
+});
+
+renderChart(ranked);
+}
+
+/* SIMULATION */
+function simulate(){
+
+saveInputs();
+
+document.getElementById("btnSimulate").disabled=true;
+document.getElementById("statusText").innerText="Analyse en cours...";
+document.getElementById("loaderContainer").style.display="block";
+document.getElementById("results").innerHTML="";
+
+const steps=[
+"Accès au comparateur...",
+"Chargement des données...",
+"Analyse des frais...",
+"Simulation des rendements...",
+"Finalisation..."
+];
+
+let progress=0;
+let step=0;
+
+let loaderText=document.getElementById("loaderText");
+
+let interval=setInterval(()=>{
+
+progress+=1.2;
+document.getElementById("loaderBar").style.width=progress+"%";
+
+let newStep=Math.floor((progress/100)*steps.length);
+if(newStep!==step && newStep<steps.length){
+step=newStep;
+loaderText.innerText=steps[step];
+}
+
+if(progress>=100){
+clearInterval(interval);
+
+document.getElementById("loaderContainer").style.display="none";
+document.getElementById("btnSimulate").disabled=false;
+document.getElementById("statusText").innerText="Analyse terminée.";
+
+let ranked=companies.map(c=>({...c,score:score(c)}))
+.sort((a,b)=>b.score-a.score);
+
+ranked.forEach((c,i)=>{
+
+let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
+let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
+let y=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
+
+let div=document.createElement("div");
+div.className="company";
+
+div.innerHTML=`
+<strong>${i+1}. ${c.name}</strong><br>
+Score global : <strong>${c.score.toFixed(2)}</strong><br>
+Rendement : <span class="${y}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
 Frais entrée : <span class="${entry}">${c.entry}%</span><br>
 Frais sortie : <span class="${exit}">${c.exit}%</span>
 `;
@@ -284,15 +354,12 @@ Frais sortie : <span class="${exit}">${c.exit}%</span>
 document.getElementById("results").appendChild(div);
 setTimeout(()=>div.classList.add("show"),50);
 
-},i*120);
 });
 
-setTimeout(()=>renderChart(ranked), ranked.length*120+300);
-
+setTimeout(()=>renderChart(ranked),400);
 }
 
-},100);
-
+},20);
 }
 
 /* BUBBLES */
