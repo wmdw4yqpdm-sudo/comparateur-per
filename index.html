@@ -90,14 +90,14 @@ button{
   font-size:16px;
 }
 
-/* 🟦 LOADING BAR */
+/* LOADER */
 #loaderContainer{
   display:none;
   margin-top:12px;
 }
 
 .loader-bg{
-  height:10px;
+  height:12px;
   background:#e5e7eb;
   border-radius:20px;
   overflow:hidden;
@@ -107,13 +107,13 @@ button{
   height:100%;
   width:0%;
   background:linear-gradient(90deg,#2563eb,#06b6d4);
-  transition:width 0.2s ease;
+  transition:width 0.25s ease;
 }
 
 .loader-text{
   text-align:center;
   font-size:13px;
-  margin-top:6px;
+  margin-top:8px;
   color:#6b7280;
 }
 
@@ -199,12 +199,13 @@ canvas{
 
 <button onclick="simulate()">Simuler</button>
 
-<!-- 🔵 LOADER -->
 <div id="loaderContainer">
   <div class="loader-bg">
     <div id="loaderBar"></div>
   </div>
-  <div class="loader-text">Analyse des contrats en cours...</div>
+  <div id="loaderText" class="loader-text">
+    Initialisation de l’analyse...
+  </div>
 </div>
 
 </div>
@@ -237,20 +238,38 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* SIMULATION + LOADING */
+/* SIMULATION */
 function simulate(){
 
 document.getElementById("loaderContainer").style.display="block";
 document.getElementById("results").innerHTML="";
 
+const steps=[
+"Initialisation des données financières...",
+"Connexion aux assureurs...",
+"Analyse des frais...",
+"Évaluation des rendements...",
+"Simulation des scénarios...",
+"Optimisation du classement...",
+"Finalisation..."
+];
+
+let loaderText=document.getElementById("loaderText");
 let progress=0;
+let stepIndex=0;
 
 let interval=setInterval(()=>{
 
-progress += Math.random()*2.5;
+progress += 0.28; // ≈ 60 secondes
 if(progress>100) progress=100;
 
 document.getElementById("loaderBar").style.width=progress+"%";
+
+let newStep=Math.floor((progress/100)*steps.length);
+if(newStep !== stepIndex && newStep < steps.length){
+stepIndex=newStep;
+loaderText.innerText=steps[stepIndex];
+}
 
 if(progress>=100){
 clearInterval(interval);
