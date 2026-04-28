@@ -15,7 +15,7 @@ body{
   overflow-x:hidden;
 }
 
-/* 🫧 BUBBLES BACKGROUND */
+/* 🫧 BUBBLES */
 #bubbleCanvas{
   position:fixed;
   top:0;
@@ -26,24 +26,6 @@ body{
   pointer-events:none;
 }
 
-/* 🔵 TOP LOADER BAR */
-#topLoader{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:4px;
-  background:#e5e7eb;
-  z-index:9999;
-}
-
-#topLoaderBar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
-}
-
-/* HEADER */
 header{
   background:#031f94;
   color:white;
@@ -104,15 +86,38 @@ button{
   cursor:pointer;
   width:100%;
   font-size:16px;
+  margin-top:10px;
 }
 
-button:hover{
-  background:#1e40af;
+/* 🔵 LOADER BAR */
+.loader-wrap{
+  width:100%;
+  height:6px;
+  background:#e5e7eb;
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:12px;
+  display:none;
 }
 
+.loader-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
+}
+
+/* 📦 RESULT ANIMATION */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
+  opacity:0;
+  transform:translateY(12px);
+  transition:all 0.45s ease;
+}
+
+.company.show{
+  opacity:1;
+  transform:translateY(0);
 }
 
 .rank{
@@ -131,19 +136,12 @@ button:hover{
   border-radius:8px;
   margin-bottom:15px;
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- 🫧 BUBBLES -->
 <canvas id="bubbleCanvas"></canvas>
-
-<!-- 🔵 LOADER BAR -->
-<div id="topLoader">
-  <div id="topLoaderBar"></div>
-</div>
 
 <header>
 <div class="topbar">
@@ -171,6 +169,11 @@ button:hover{
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="startLoading()">Simuler</button>
+
+<div class="loader-wrap" id="loaderWrap">
+<div class="loader-bar" id="loaderBar"></div>
+</div>
+
 </div>
 
 <div class="card">
@@ -202,30 +205,34 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* 🔵 LOADER 60 SECONDES */
+/* LOADER */
 function startLoading(){
 
-const bar=document.getElementById("topLoaderBar");
+const wrap=document.getElementById("loaderWrap");
+const bar=document.getElementById("loaderBar");
+
+wrap.style.display="block";
 bar.style.width="0%";
 
-let progress=0;
+let p=0;
 
-/* ~60 sec */
 const timer=setInterval(()=>{
 
-progress += 0.17; 
-bar.style.width=progress+"%";
+p+=0.16;
+bar.style.width=p+"%";
 
-if(progress>=100){
+if(p>=100){
 clearInterval(timer);
-setTimeout(simulate,300);
+setTimeout(()=>{
+wrap.style.display="none";
+simulate();
+},300);
 }
 
 },100);
-
 }
 
-/* SIMULATION */
+/* 📊 RESULT + ANIMATION */
 function simulate(){
 
 const fullname=document.getElementById("fullname").value;
@@ -237,23 +244,40 @@ const monthly=document.getElementById("monthly").value;
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
 
 let html=`<div class="client-box">
-${fullname}<br>
-${profession}<br>
-${age} ans - ${income}€ - ${monthly}€/mois
+${fullname}<br>${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois
 </div>`;
 
+document.getElementById("results").innerHTML=html;
+
+let container=document.getElementById("results");
+
+/* animation progressive */
 ranked.forEach((c,i)=>{
 
-html+=`
-<div class="company">
+setTimeout(()=>{
+
+let div=document.createElement("div");
+div.className="company";
+
+let badge="low";
+if(c.score>5)badge="best";
+else if(c.score>3.5)badge="medium";
+
+div.innerHTML=`
 <div class="rank">${i+1}. ${c.name}</div>
 <div>Rendement : ${c.yieldMin}% → ${c.yieldMax}%</div>
 <div>Frais entrée : ${c.entry}% | Sortie : ${c.exit}%</div>
 <div>Score : ${c.score.toFixed(2)}</div>
-</div>`;
-});
+`;
 
-document.getElementById("results").innerHTML=html;
+container.appendChild(div);
+
+/* trigger animation */
+setTimeout(()=>div.classList.add("show"),50);
+
+}, i*120);
+
+});
 
 /* GRAPH */
 const ctx=document.getElementById("chart");
