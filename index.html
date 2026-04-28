@@ -213,6 +213,17 @@ document.getElementById("results").innerHTML="";
 document.getElementById("retirement").innerHTML="";
 document.getElementById("advice").innerHTML="";
 
+/* ⏳ CHARGEMENT 1 MIN 30 */
+let loader=0;
+let loading=setInterval(()=>{
+
+loader += 1.11; // 90 secondes ≈ 100%
+if(loader>100) loader=100;
+
+if(loader>=100){
+clearInterval(loading);
+
+/* RESULT */
 ranked.forEach((c,i)=>{
 
 setTimeout(()=>{
@@ -234,6 +245,7 @@ document.getElementById("results").appendChild(div);
 setTimeout(()=>div.classList.add("show"),50);
 
 },i*120);
+
 });
 
 /* RETRAITE */
@@ -268,6 +280,8 @@ document.getElementById("advice").innerHTML=
 
 },900);
 
+}
+},90);
 }
 
 /* BULLES */
