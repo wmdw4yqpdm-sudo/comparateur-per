@@ -11,13 +11,12 @@
 html,body{
   margin:0;
   padding:0;
-  height:100%;
   font-family:Arial, sans-serif;
   background:#f4f6f8;
   overflow-x:hidden;
 }
 
-/* 🫧 CANVAS BULLES FIXÉ */
+/* 🫧 CANVAS BULLES */
 #bubbleCanvas{
   position:fixed;
   inset:0;
@@ -78,7 +77,6 @@ input,select{
   margin:6px 0;
   border:1px solid #ccc;
   border-radius:6px;
-  box-sizing:border-box;
 }
 
 button{
@@ -92,30 +90,13 @@ button{
   font-size:16px;
 }
 
-/* LOADER */
-.loader-wrap{
-  width:100%;
-  height:12px;
-  background:#e5e7eb;
-  border-radius:20px;
-  overflow:hidden;
-  margin-top:12px;
-  display:none;
-}
-
-.loader-bar{
-  width:0%;
-  height:100%;
-  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
-}
-
-/* RESULT ANIMATION */
+/* RESULT */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
   opacity:0;
   transform:translateY(12px);
-  transition:0.5s ease;
+  transition:0.4s ease;
 }
 
 .company.show{
@@ -170,11 +151,7 @@ canvas{
 <input id="income" type="number" placeholder="Revenus annuels">
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
-<button onclick="startLoading()">Simuler</button>
-
-<div class="loader-wrap" id="loaderWrap">
-<div class="loader-bar" id="loaderBar"></div>
-</div>
+<button onclick="simulate()">Simuler</button>
 
 </div>
 
@@ -184,18 +161,8 @@ canvas{
 </div>
 
 <div class="card">
-<h2>Graphique comparatif</h2>
+<h2>Graphique</h2>
 <div class="chart-box"><canvas id="chart"></canvas></div>
-</div>
-
-<div class="card">
-<h2>Score global /100</h2>
-<div class="chart-box"><canvas id="scoreChart"></canvas></div>
-</div>
-
-<div class="card">
-<h2>Analyse multi-critères</h2>
-<div class="chart-box"><canvas id="radarChart"></canvas></div>
 </div>
 
 </div>
@@ -216,30 +183,11 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* LOADER */
-function startLoading(){
-const bar=document.getElementById("loaderBar");
-const wrap=document.getElementById("loaderWrap");
-
-wrap.style.display="block";
-let p=0;
-
-let t=setInterval(()=>{
-p+=1.5;
-bar.style.width=p+"%";
-
-if(p>=100){
-clearInterval(t);
-wrap.style.display="none";
-simulate();
-}
-},20);
-}
-
 /* SIMULATION */
 function simulate(){
 
-let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
+let ranked=companies.map(c=>({...c,score:score(c)}))
+.sort((a,b)=>b.score-a.score);
 
 document.getElementById("results").innerHTML="";
 
@@ -268,7 +216,7 @@ setTimeout(()=>div.classList.add("show"),50);
 },i*120);
 });
 
-/* CHARTS */
+/* CHART */
 setTimeout(()=>{
 
 new Chart(document.getElementById("chart"),{
@@ -277,42 +225,17 @@ data:{
 labels:ranked.map(c=>c.name),
 datasets:[
 {label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"#22c55e"},
-{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"#ef4444"},
-{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"#f97316"}
+{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"#ef4444"}
 ]
-},
-options:{responsive:true,maintainAspectRatio:false}
-});
-
-new Chart(document.getElementById("scoreChart"),{
-type:"bar",
-data:{
-labels:ranked.map(c=>c.name),
-datasets:[{
-label:"Score /100",
-data:ranked.map(c=>c.score*10),
-backgroundColor:"#2563eb"
-}]
-},
-options:{responsive:true,maintainAspectRatio:false}
-});
-
-new Chart(document.getElementById("radarChart"),{
-type:"radar",
-data:{
-labels:["Rendement","Frais entrée","Frais sortie"],
-datasets:ranked.slice(0,3).map(c=>({
-label:c.name,
-data:[c.yieldMax,5-c.entry,5-c.exit],
-borderWidth:2
-}))
 },
 options:{responsive:true,maintainAspectRatio:false}
 });
 
 },400);
 
-/* 🫧 BULLES ULTRA STABLE */
+}
+
+/* 🫧 BULLES ULTRA FIABLE */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -325,17 +248,16 @@ h=window.innerHeight;
 canvas.width=w;
 canvas.height=h;
 }
-
 resize();
 window.addEventListener("resize",resize);
 
 let bubbles=[];
-for(let i=0;i<70;i++){
+for(let i=0;i<80;i++){
 bubbles.push({
 x:Math.random()*w,
 y:Math.random()*h,
 r:Math.random()*6+2,
-v:Math.random()*0.5+0.2
+v:Math.random()*0.6+0.2
 });
 }
 
@@ -352,7 +274,10 @@ ctx.clearRect(0,0,w,h);
 for(let b of bubbles){
 
 b.y-=b.v;
-if(b.y<0){b.y=h;b.x=Math.random()*w;}
+if(b.y<0){
+b.y=h;
+b.x=Math.random()*w;
+}
 
 ctx.beginPath();
 ctx.fillStyle=colors[Math.floor(Math.random()*colors.length)];
