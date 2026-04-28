@@ -67,7 +67,7 @@ header{
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
 
-input, select{
+input{
   width:100%;
   padding:10px;
   margin:6px 0;
@@ -87,6 +87,29 @@ button{
   margin-top:10px;
 }
 
+/* 🧾 PROFESSIONS BOX */
+.caisse{
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:10px;
+  margin-top:8px;
+}
+
+.caisse-title{
+  font-weight:bold;
+  color:#031f94;
+  cursor:pointer;
+}
+
+.caisse-list{
+  font-size:13px;
+  color:#374151;
+  margin-top:5px;
+  display:none;
+}
+
+/* LOADER */
 .loader-wrap{
   width:100%;
   height:10px;
@@ -103,6 +126,7 @@ button{
   background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
 }
 
+/* RESULT */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -148,6 +172,12 @@ button{
 
 <input id="fullname" placeholder="Nom et prénom">
 
+<input id="age" type="number" placeholder="Âge">
+<input id="income" type="number" placeholder="Revenus annuels">
+<input id="monthly" type="number" placeholder="Versement mensuel">
+
+<h3>Choisir votre caisse</h3>
+
 <select id="profession">
 <option value="CARPIMKO">CARPIMKO</option>
 <option value="CIPAV">CIPAV-URSSAF</option>
@@ -155,9 +185,43 @@ button{
 <option value="CARMF">CARMF</option>
 </select>
 
-<input id="age" type="number" placeholder="Âge">
-<input id="income" type="number" placeholder="Revenus annuels">
-<input id="monthly" type="number" placeholder="Versement mensuel">
+<!-- 👇 LISTES MÉTIERS -->
+<div class="caisse">
+<div class="caisse-title" onclick="toggle('carpimko')">CARPIMKO (clic pour voir)</div>
+<div class="caisse-list" id="carpimko">
+Kinésithérapeutes<br>
+Orthophonistes<br>
+Orthoptistes<br>
+Podologues<br>
+Ergothérapeutes
+</div>
+</div>
+
+<div class="caisse">
+<div class="caisse-title" onclick="toggle('cipav')">CIPAV-URSSAF</div>
+<div class="caisse-list" id="cipav">
+Ostéopathes<br>
+Psychologues<br>
+Chiropracteurs<br>
+Neuropsychologues
+</div>
+</div>
+
+<div class="caisse">
+<div class="caisse-title" onclick="toggle('carcdsf')">CARCDSF</div>
+<div class="caisse-list" id="carcdsf">
+Sages-femmes<br>
+Chirurgiens-dentistes
+</div>
+</div>
+
+<div class="caisse">
+<div class="caisse-title" onclick="toggle('carmf')">CARMF</div>
+<div class="caisse-list" id="carmf">
+Médecins généralistes<br>
+Médecins spécialistes
+</div>
+</div>
 
 <button onclick="startLoading()">Simuler</button>
 
@@ -190,33 +254,18 @@ const companies=[
 {name:"Axa",entry:4.4,exit:2.5,yieldMin:2.9,yieldMax:3.5}
 ];
 
-/* PROFESSION GROUPS */
-const profGroups={
-CARPIMKO:"Kinésithérapeute, Orthoptiste, Podologue, Orthophoniste",
-CIPAV:"Ostéopathe, Psychologue, Chiropracteur, Neuropsychologue",
-CARCDSF:"Sage-femme, Chirurgien-dentiste",
-CARMF:"Médecin généraliste, Médecin spécialiste"
-};
-
 function score(c){
 const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* COLOR SYSTEM */
-function feeColor(v){
-if(v<1.5) return "best";
-if(v<3) return "medium";
-return "low";
+/* toggle professions */
+function toggle(id){
+let el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none" : "block";
 }
 
-function yieldColor(v){
-if(v>=5) return "best";
-if(v>=3.5) return "medium";
-return "low";
-}
-
-/* LOADER */
+/* loader */
 function startLoading(){
 
 const wrap=document.getElementById("loaderWrap");
@@ -243,7 +292,7 @@ simulate();
 },100);
 }
 
-/* SIMULATION */
+/* simulate */
 function simulate(){
 
 const fullname=document.getElementById("fullname").value;
@@ -255,17 +304,10 @@ const monthly=document.getElementById("monthly").value;
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
 
 let container=document.getElementById("results");
-container.innerHTML="";
-
-/* client */
-container.innerHTML+=`
-<div class="client-box">
-${fullname}<br>
-${profGroups[profession]}<br>
-${age} ans - ${income}€ - ${monthly}€/mois
+container.innerHTML=`<div class="client-box">
+${fullname}<br>${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois
 </div>`;
 
-/* results animés */
 ranked.forEach((c,i)=>{
 
 setTimeout(()=>{
@@ -275,21 +317,8 @@ div.className="company";
 
 div.innerHTML=`
 <div class="rank">${i+1}. ${c.name}</div>
-
-<div>
-Rendement :
-<span class="${yieldColor(c.yieldMax)}">
-${c.yieldMin}% → ${c.yieldMax}%
-</span>
-</div>
-
-<div>
-Frais entrée :
-<span class="${feeColor(c.entry)}">${c.entry}%</span>
-| Sortie :
-<span class="${feeColor(c.exit)}">${c.exit}%</span>
-</div>
-
+<div>Rendement : ${c.yieldMin}% → ${c.yieldMax}%</div>
+<div>Frais entrée : ${c.entry}% | Sortie : ${c.exit}%</div>
 <div>Score : ${c.score.toFixed(2)}</div>
 `;
 
@@ -301,7 +330,7 @@ setTimeout(()=>div.classList.add("show"),50);
 
 });
 
-/* GRAPH */
+/* graph */
 const ctx=document.getElementById("chart");
 
 if(window.chart) window.chart.destroy();
@@ -320,7 +349,7 @@ datasets:[
 
 }
 
-/* BUBBLES */
+/* bubbles */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
