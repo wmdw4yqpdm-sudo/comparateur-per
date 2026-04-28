@@ -90,7 +90,7 @@ button{
 
 .loader-wrap{
   width:100%;
-  height:10px;
+  height:12px;
   background:#e5e7eb;
   border-radius:20px;
   overflow:hidden;
@@ -111,7 +111,7 @@ button{
   opacity:0;
   transform:translateY(18px);
   filter:blur(3px);
-  transition:all 0.6s ease;
+  transition:all 0.5s ease;
 }
 
 .company.show{
@@ -123,6 +123,14 @@ button{
 .best{color:#059669;font-weight:bold;}
 .medium{color:#d97706;font-weight:bold;}
 .low{color:#dc2626;font-weight:bold;}
+
+canvas{
+  width:100% !important;
+}
+
+.chart-box{
+  height:320px;
+}
 
 .client-box{
   background:#eef2ff;
@@ -197,19 +205,17 @@ button{
 
 <div class="card">
 <h2>Graphique comparatif</h2>
-<canvas id="chart"></canvas>
+<div class="chart-box"><canvas id="chart"></canvas></div>
 </div>
 
-<!-- 🆕 SCORE GLOBAL -->
 <div class="card">
 <h2>Score global /100</h2>
-<canvas id="scoreChart"></canvas>
+<div class="chart-box"><canvas id="scoreChart"></canvas></div>
 </div>
 
-<!-- 🆕 RADAR -->
 <div class="card">
 <h2>Analyse multi-critères</h2>
-<canvas id="radarChart"></canvas>
+<div class="chart-box"><canvas id="radarChart"></canvas></div>
 </div>
 
 </div>
@@ -229,32 +235,28 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
+/* LOADER */
 function startLoading(){
 
 const wrap=document.getElementById("loaderWrap");
 const bar=document.getElementById("loaderBar");
 
 wrap.style.display="block";
-bar.style.width="0%";
-
 let p=0;
 
-const timer=setInterval(()=>{
-
-p+=0.16;
+const t=setInterval(()=>{
+p+=1.2;
 bar.style.width=p+"%";
 
 if(p>=100){
-clearInterval(timer);
-setTimeout(()=>{
+clearInterval(t);
 wrap.style.display="none";
 simulate();
-},300);
+}
+},30);
 }
 
-},100);
-}
-
+/* SIMULATION */
 function simulate(){
 
 const fullname=document.getElementById("fullname").value;
@@ -265,11 +267,9 @@ const monthly=document.getElementById("monthly").value;
 
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
 
-let container=document.getElementById("results");
-container.innerHTML=`<div class="client-box">
-${fullname}<br>
-${profession}<br>
-${age} ans - ${income}€ - ${monthly}€/mois
+document.getElementById("results").innerHTML=`
+<div class="client-box">
+${fullname}<br>${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois
 </div>`;
 
 /* LISTE */
@@ -280,47 +280,44 @@ setTimeout(()=>{
 let div=document.createElement("div");
 div.className="company";
 
-let entryColor = c.entry<1.5?"best":c.entry<3?"medium":"low";
-let exitColor = c.exit<1.5?"best":c.exit<3?"medium":"low";
-let yieldColor = c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
+let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
+let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
+let yield=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
 
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
-Rendement : <span class="${yieldColor}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
-Frais entrée : <span class="${entryColor}">${c.entry}%</span> | Sortie : <span class="${exitColor}">${c.exit}%</span><br>
+Rendement : <span class="${yield}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
+Frais entrée : <span class="${entry}">${c.entry}%</span>
+| Sortie : <span class="${exit}">${c.exit}%</span><br>
 Score : ${c.score.toFixed(2)}
 `;
 
-container.appendChild(div);
+document.getElementById("results").appendChild(div);
 setTimeout(()=>div.classList.add("show"),50);
 
-}, i*120);
-
+},i*120);
 });
 
-/* 📊 BAR CHART */
-const ctx=document.getElementById("chart");
+/* CHARTS FIX */
 
-if(window.chart) window.chart.destroy();
+/* BAR */
+setTimeout(()=>{
 
-window.chart=new Chart(ctx,{
+new Chart(document.getElementById("chart"),{
 type:"bar",
 data:{
 labels:ranked.map(c=>c.name),
 datasets:[
-{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},
-{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},
-{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}
+{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"#22c55e"},
+{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"#ef4444"},
+{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"#f97316"}
 ]
-}
+},
+options:{responsive:true,maintainAspectRatio:false}
 });
 
-/* 🆕 SCORE CHART */
-const ctx2=document.getElementById("scoreChart");
-
-if(window.scoreChart) window.scoreChart.destroy();
-
-window.scoreChart=new Chart(ctx2,{
+/* SCORE */
+new Chart(document.getElementById("scoreChart"),{
 type:"bar",
 data:{
 labels:ranked.map(c=>c.name),
@@ -329,33 +326,29 @@ label:"Score /100",
 data:ranked.map(c=>c.score*10),
 backgroundColor:"#2563eb"
 }]
-}
+},
+options:{responsive:true,maintainAspectRatio:false}
 });
 
-/* 🆕 RADAR */
-const ctx3=document.getElementById("radarChart");
-
-if(window.radarChart) window.radarChart.destroy();
-
-window.radarChart=new Chart(ctx3,{
+/* RADAR */
+new Chart(document.getElementById("radarChart"),{
 type:"radar",
 data:{
 labels:["Rendement","Frais entrée","Frais sortie"],
-datasets:ranked.slice(0,3).map((c,i)=>({
+datasets:ranked.slice(0,3).map(c=>({
 label:c.name,
-data:[
-c.yieldMax,
-5-c.entry,
-5-c.exit
-],
+data:[c.yieldMax,5-c.entry,5-c.exit],
 borderWidth:2
 }))
-}
+},
+options:{responsive:true,maintainAspectRatio:false}
 });
 
+},400);
+
 }
 
-/* bubbles (inchangé) */
+/* BUBBLES */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -367,45 +360,21 @@ h=canvas.height=window.innerHeight;
 resize();
 window.addEventListener("resize",resize);
 
-let mouse={x:w/2,y:h/2};
-window.addEventListener("mousemove",e=>{
-mouse.x=e.clientX;
-mouse.y=e.clientY;
-});
-
 let bubbles=[];
 for(let i=0;i<60;i++){
-bubbles.push({
-x:Math.random()*w,
-y:Math.random()*h,
-r:Math.random()*5+2,
-v:Math.random()*0.4+0.1
-});
+bubbles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*5+2,v:Math.random()*0.4+0.1});
 }
 
 function animate(){
 ctx.clearRect(0,0,w,h);
-
 for(let b of bubbles){
-
 b.y-=b.v;
 if(b.y<0){b.y=h;b.x=Math.random()*w;}
-
-let dx=b.x-mouse.x;
-let dy=b.y-mouse.y;
-let d=Math.sqrt(dx*dx+dy*dy);
-
-if(d<120){
-b.x+=dx/d*2;
-b.y+=dy/d*2;
-}
-
 ctx.beginPath();
 ctx.fillStyle="rgba(37,99,235,0.15)";
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
-
 requestAnimationFrame(animate);
 }
 animate();
