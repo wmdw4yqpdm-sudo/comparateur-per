@@ -12,7 +12,18 @@ body{
   font-family:Arial, sans-serif;
   margin:0;
   background:#f4f6f8;
-  overflow:hidden;
+  overflow-x:hidden;
+}
+
+/* 🎯 BUBBLES BACKGROUND */
+#bubbleCanvas{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+  pointer-events:none;
 }
 
 /* HEADER */
@@ -56,8 +67,6 @@ header{
   margin-bottom:20px;
   border-radius:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
-  position:relative;
-  z-index:2;
 }
 
 input, select{
@@ -95,9 +104,20 @@ button:hover{
   margin-bottom:6px;
 }
 
-.best{color:#059669;font-weight:bold;}
-.medium{color:#d97706;font-weight:bold;}
-.low{color:#dc2626;font-weight:bold;}
+.best{
+  color:#059669;
+  font-weight:bold;
+}
+
+.medium{
+  color:#d97706;
+  font-weight:bold;
+}
+
+.low{
+  color:#dc2626;
+  font-weight:bold;
+}
 
 .client-box{
   background:#eef2ff;
@@ -106,31 +126,22 @@ button:hover{
   margin-bottom:15px;
 }
 
-/* LOADER */
-.loader-box{
-  display:none;
-  margin-top:20px;
-}
-
-/* BUBBLES CANVAS */
-#bubbleCanvas{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  z-index:0;
-}
 </style>
 </head>
 
 <body>
 
+<!-- 🫧 CANVAS BULLES -->
 <canvas id="bubbleCanvas"></canvas>
 
 <header>
 <div class="topbar">
-<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
+<img 
+src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80"
+class="logo"
+alt="Alyor"
+>
+
 <div class="title">Comparateur PER</div>
 </div>
 </header>
@@ -143,17 +154,10 @@ button:hover{
 <input id="fullname" placeholder="Nom et prénom">
 
 <select id="profession">
-<option>Infirmier libéral</option>
-<option>Masseur-kinésithérapeute</option>
-<option>Orthophoniste</option>
-<option>Ostéopathe</option>
-<option>Psychologue</option>
-<option>Chirurgien-dentiste</option>
-<option>Médecin</option>
-<option>Chiropracteur</option>
-<option>Psychomotricien</option>
-<option>Neuropsychologue</option>
-<option>Sage-femme</option>
+<option>CARPIMKO - Infirmier / Kiné / Orthophoniste / Pédicure</option>
+<option>CIPAV - URSSAF (Ostéopathe / Psychologue / Chiropracteur / Psychomotricien / Neuropsychologue)</option>
+<option>CARCDSF - Chirurgien-dentiste / Sage-femme</option>
+<option>CARMF - Médecin</option>
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -161,6 +165,7 @@ button:hover{
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="startLoading()">Simuler</button>
+
 </div>
 
 <div class="card">
@@ -178,103 +183,131 @@ button:hover{
 
 <script>
 
-/* TES DONNÉES (RIEN SUPPRIMÉ) */
-const companies=[
-{name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
-{name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
-{name:"MMA",entry:2.6,exit:1.4,yieldMin:3.6,yieldMax:4.2},
-{name:"April",entry:3.2,exit:2,yieldMin:3.1,yieldMax:3.8},
-{name:"Axa",entry:4.4,exit:2.5,yieldMin:2.9,yieldMax:3.5}
+/* 🧠 TES DONNÉES (STRICTEMENT INCHANGÉES) */
+const companies = [
+{ name:"Generali", entry:0.95, exit:0, yieldMin:5.77, yieldMax:8.70 },
+{ name:"Groupama", entry:1.8, exit:1, yieldMin:4.3, yieldMax:5.2 },
+{ name:"MMA", entry:2.6, exit:1.4, yieldMin:3.6, yieldMax:4.2 },
+{ name:"April", entry:3.2, exit:2, yieldMin:3.1, yieldMax:3.8 },
+{ name:"Axa", entry:4.4, exit:2.5, yieldMin:2.9, yieldMax:3.5 }
 ];
 
 function score(c){
-const avg=(c.yieldMin+c.yieldMax)/2;
-return avg-(c.entry*0.55)-(c.exit*0.45);
+const avg = (c.yieldMin + c.yieldMax) / 2;
+return avg - (c.entry * 0.55) - (c.exit * 0.45);
 }
 
-/* LOADER SIMPLE (NON CASSE TON CODE) */
+/* SIMU */
 function startLoading(){
-document.getElementById("results").innerHTML="";
-document.getElementById("recoBox").innerHTML="";
-
-setTimeout(simulate,1200);
+setTimeout(simulate, 800);
 }
 
-/* SIMULATION */
+/* RESULTATS */
 function simulate(){
 
-const fullname=document.getElementById("fullname").value;
-const profession=document.getElementById("profession").value;
-const age=document.getElementById("age").value;
-const income=document.getElementById("income").value;
-const monthly=document.getElementById("monthly").value;
+const fullname = document.getElementById("fullname").value;
+const profession = document.getElementById("profession").value;
+const age = document.getElementById("age").value;
+const income = document.getElementById("income").value;
+const monthly = document.getElementById("monthly").value;
 
-let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
-let best=ranked[0];
+let ranked = companies
+.map(c => ({...c, score: score(c)}))
+.sort((a,b) => b.score - a.score);
 
-let html=`<div class="client-box">
-${fullname}<br>
+let html = `
+<div class="client-box">
+<strong>${fullname}</strong><br>
 ${profession}<br>
 ${age} ans - ${income}€ - ${monthly}€/mois
-</div>`;
+</div>
+`;
 
 ranked.forEach((c,i)=>{
-html+=`
+
+let badge = "low";
+if(c.score > 5) badge = "best";
+else if(c.score > 3.5) badge = "medium";
+
+html += `
 <div class="company">
 <div class="rank">${i+1}. ${c.name}</div>
-<div>Rendement : ${c.yieldMin}% → ${c.yieldMax}%</div>
-<div>Frais entrée : ${c.entry}% | Sortie : ${c.exit}%</div>
+
+<div>
+Rendement :
+<span class="${badge}">
+${c.yieldMin}% → ${c.yieldMax}%
+</span>
+</div>
+
+<div>
+Frais entrée :
+<span class="${c.entry < 2 ? 'best' : c.entry < 3.5 ? 'medium' : 'low'}">
+${c.entry}%
+</span>
+
+| Sortie :
+<span class="${c.exit < 1 ? 'best' : c.exit < 2 ? 'medium' : 'low'}">
+${c.exit}%
+</span>
+</div>
+
 <div>Score : ${c.score.toFixed(2)}</div>
-</div>`;
+
+</div>
+`;
 });
 
-document.getElementById("results").innerHTML=html;
-document.getElementById("recoBox").innerHTML=`🥇 Recommandation : ${best.name}`;
+document.getElementById("results").innerHTML = html;
 
-/* GRAPH */
-const ctx=document.getElementById("chart");
+/* 📊 GRAPH (RESTE IDENTIQUE) */
+const ctx = document.getElementById("chart");
 
-if(window.chart)window.chart.destroy();
+if(window.chart) window.chart.destroy();
 
-window.chart=new Chart(ctx,{
-type:"bar",
-data:{
-labels:ranked.map(c=>c.name),
-datasets:[
-{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},
-{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},
-{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}
+window.chart = new Chart(ctx, {
+type: "bar",
+data: {
+labels: ranked.map(c => c.name),
+datasets: [
+{ label:"Rendement", data: ranked.map(c => c.yieldMax), backgroundColor:"green" },
+{ label:"Frais entrée", data: ranked.map(c => c.entry), backgroundColor:"red" },
+{ label:"Frais sortie", data: ranked.map(c => c.exit), backgroundColor:"orange" }
 ]
+},
+options:{
+responsive:true,
+scales:{ y:{ beginAtZero:true } }
 }
 });
 
 }
 
-/* 🫧 BUBBLES PREMIUM */
-const canvas=document.getElementById("bubbleCanvas");
-const ctx=canvas.getContext("2d");
+/* 🫧 BUBBLES (AJOUT SANS TOUCHER TON PRODUIT) */
+const canvas = document.getElementById("bubbleCanvas");
+const ctx = canvas.getContext("2d");
 
 let w,h;
 function resize(){
-w=canvas.width=window.innerWidth;
-h=canvas.height=window.innerHeight;
+w = canvas.width = window.innerWidth;
+h = canvas.height = window.innerHeight;
 }
 resize();
-window.addEventListener("resize",resize);
+window.addEventListener("resize", resize);
 
-let mouse={x:w/2,y:h/2};
-window.addEventListener("mousemove",e=>{
-mouse.x=e.clientX;
-mouse.y=e.clientY;
+let mouse = {x:w/2,y:h/2};
+window.addEventListener("mousemove", e=>{
+mouse.x = e.clientX;
+mouse.y = e.clientY;
 });
 
-let bubbles=[];
+let bubbles = [];
 for(let i=0;i<70;i++){
 bubbles.push({
 x:Math.random()*w,
 y:Math.random()*h,
 r:Math.random()*5+2,
-v:Math.random()*0.6+0.2
+v:Math.random()*0.4+0.1
 });
 }
 
@@ -283,27 +316,29 @@ ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
 
-b.y-=b.v;
-if(b.y<0){b.y=h;b.x=Math.random()*w;}
+b.y -= b.v;
+if(b.y < 0){
+b.y = h;
+b.x = Math.random()*w;
+}
 
-let dx=b.x-mouse.x;
-let dy=b.y-mouse.y;
-let d=Math.sqrt(dx*dx+dy*dy);
+let dx = b.x - mouse.x;
+let dy = b.y - mouse.y;
+let d = Math.sqrt(dx*dx + dy*dy);
 
-if(d<120){
-b.x+=dx/d*2;
-b.y+=dy/d*2;
+if(d < 120){
+b.x += dx/d*2;
+b.y += dy/d*2;
 }
 
 ctx.beginPath();
-ctx.fillStyle="rgba(37,99,235,0.15)";
+ctx.fillStyle = "rgba(37,99,235,0.15)";
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
 
 requestAnimationFrame(animate);
 }
-
 animate();
 
 </script>
