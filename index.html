@@ -105,7 +105,7 @@ button{
   background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
 }
 
-/* 🌫 FADE ANIMATION ULTRA PRO */
+/* animation fade */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -113,7 +113,6 @@ button{
   opacity:0;
   transform:translateY(18px);
   filter:blur(3px);
-
   transition:all 0.6s ease;
 }
 
@@ -123,7 +122,7 @@ button{
   filter:blur(0);
 }
 
-/* TEXT COLORS */
+/* couleurs */
 .best{color:#059669;font-weight:bold;}
 .medium{color:#d97706;font-weight:bold;}
 .low{color:#dc2626;font-weight:bold;}
@@ -155,12 +154,34 @@ button{
 
 <input id="fullname" placeholder="Nom et prénom">
 
+<!-- 👇 MENU DÉROULANT AJOUTÉ -->
 <select id="profession">
+
+<optgroup label="CARPIMKO">
 <option>Kinésithérapeute</option>
+<option>Orthophoniste</option>
+<option>Orthoptiste</option>
+<option>Podologue</option>
+<option>Ergothérapeute</option>
+</optgroup>
+
+<optgroup label="CIPAV-URSSAF">
 <option>Ostéopathe</option>
 <option>Psychologue</option>
+<option>Chiropracteur</option>
+<option>Neuropsychologue</option>
+</optgroup>
+
+<optgroup label="CARCDSF">
 <option>Sage-femme</option>
-<option>Médecin</option>
+<option>Chirurgien-dentiste</option>
+</optgroup>
+
+<optgroup label="CARMF">
+<option>Médecin généraliste</option>
+<option>Médecin spécialiste</option>
+</optgroup>
+
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -203,20 +224,7 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* 🎨 COLOR SYSTEM */
-function feeColor(v){
-if(v < 1.5) return "best";
-if(v < 3) return "medium";
-return "low";
-}
-
-function yieldColor(v){
-if(v >= 5) return "best";
-if(v >= 3.5) return "medium";
-return "low";
-}
-
-/* LOADER */
+/* loader */
 function startLoading(){
 
 const wrap=document.getElementById("loaderWrap");
@@ -243,7 +251,7 @@ simulate();
 },100);
 }
 
-/* SIMULATE */
+/* simulate */
 function simulate(){
 
 const fullname=document.getElementById("fullname").value;
@@ -256,10 +264,11 @@ let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score
 
 let container=document.getElementById("results");
 container.innerHTML=`<div class="client-box">
-${fullname}<br>${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois
+${fullname}<br>
+${profession}<br>
+${age} ans - ${income}€ - ${monthly}€/mois
 </div>`;
 
-/* 🌫 FADE ANIMÉ */
 ranked.forEach((c,i)=>{
 
 setTimeout(()=>{
@@ -269,30 +278,20 @@ div.className="company";
 
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
-
-Rendement :
-<span class="${yieldColor(c.yieldMax)}">
-${c.yieldMin}% → ${c.yieldMax}%
-</span><br>
-
-Frais entrée :
-<span class="${feeColor(c.entry)}">${c.entry}%</span>
-| Sortie :
-<span class="${feeColor(c.exit)}">${c.exit}%</span><br>
-
+Rendement : ${c.yieldMin}% → ${c.yieldMax}%<br>
+Frais entrée : ${c.entry}% | Sortie : ${c.exit}%<br>
 Score : ${c.score.toFixed(2)}
 `;
 
 container.appendChild(div);
 
-/* déclenche fade */
 setTimeout(()=>div.classList.add("show"),50);
 
 }, i*120);
 
 });
 
-/* GRAPH */
+/* chart */
 const ctx=document.getElementById("chart");
 
 if(window.chart) window.chart.destroy();
@@ -311,7 +310,7 @@ datasets:[
 
 }
 
-/* BUBBLES (inchangé) */
+/* bubbles */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
