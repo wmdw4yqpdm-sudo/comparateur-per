@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Comparateur PER CGP Premium</title>
+<title>CGP SaaS - PER Intelligence Platform</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -17,32 +17,41 @@
   --warning:#f59e0b;
   --danger:#dc2626;
   --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#0f172a;
 }
 
 body{
   font-family:system-ui,Arial;
   margin:0;
   background:var(--bg);
+  color:var(--text);
 }
 
 header{
   background:linear-gradient(135deg,var(--primary),var(--primary-dark));
   color:white;
   padding:22px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
 }
 
-.topbar{display:flex;gap:16px;align-items:center}
+.topbar{display:flex;gap:14px;align-items:center}
 .logo{height:55px;background:white;padding:6px;border-radius:10px}
-.title{font-size:24px;font-weight:800}
+.title{font-size:22px;font-weight:900}
 .subtitle{font-size:13px;opacity:.85}
 
-.container{max-width:1000px;margin:auto;padding:20px}
+.container{max-width:1050px;margin:auto;padding:20px}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
 
 .card{
-  background:white;
+  background:var(--card);
   border-radius:16px;
   padding:18px;
-  margin-bottom:18px;
   box-shadow:0 6px 20px rgba(0,0,0,.06);
 }
 
@@ -55,91 +64,74 @@ button{
   width:100%;padding:12px;border:0;
   border-radius:10px;
   background:linear-gradient(135deg,var(--primary),var(--accent));
-  color:white;font-weight:700;
+  color:white;font-weight:800;
   cursor:pointer;
 }
 
-.client-box{
-  background:#eef2ff;
-  padding:12px;border-radius:12px;
-  border-left:5px solid var(--primary);
-}
-
-.company{padding:12px;border-bottom:1px solid #eee}
-.rank{font-weight:800}
-
-.best{color:var(--success);font-weight:700}
-.medium{color:var(--warning);font-weight:700}
-.low{color:var(--danger);font-weight:700}
-
-/* ===== LOADER PREMIUM UPGRADE ===== */
-.loader-box{
+/* LOADER SaaS */
+.loader{
   display:none;
   text-align:center;
-  margin-top:15px;
+  margin-top:10px;
 }
-
-/* fond subtil animé */
-.loader-bg{
-  width:100%;
-  height:6px;
-  background:#e5e7eb;
-  border-radius:20px;
-  overflow:hidden;
-  position:relative;
-}
-
-.loader-bar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,var(--primary),var(--accent),var(--success));
-  transition:width .4s ease;
-}
-
-/* spinner premium */
 .spinner{
-  width:42px;
-  height:42px;
-  margin:12px auto;
+  width:46px;height:46px;margin:10px auto;
   border-radius:50%;
-  border:3px solid rgba(3,31,148,0.2);
+  border:3px solid rgba(3,31,148,.2);
   border-top:3px solid var(--primary);
   animation:spin 1s linear infinite;
-  position:relative;
 }
-
-.spinner:after{
-  content:"";
-  position:absolute;
-  inset:6px;
-  border-radius:50%;
-  border:2px solid rgba(14,165,233,0.3);
-  border-top-color:var(--accent);
-  animation:spin 1.6s linear infinite reverse;
-}
-
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.loader-text{
+.bar{
+  height:6px;
+  width:0;
+  background:linear-gradient(90deg,var(--primary),var(--accent),var(--success));
+  border-radius:20px;
+  transition:width .3s;
+}
+
+.step{
+  font-size:13px;
   margin-top:8px;
-  font-weight:600;
   color:var(--primary-dark);
-  min-height:20px;
+  min-height:18px;
 }
 
-/* fade clean */
-.fade{
-  animation:fade .3s ease-in;
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
 }
-@keyframes fade{
-  from{opacity:0;transform:translateY(6px)}
-  to{opacity:1;transform:translateY(0)}
+.kpi div{
+  background:#f8fafc;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
 }
 
-.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.kpi div{background:#f8fafc;padding:10px;border-radius:10px;text-align:center}
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:20px;
+  font-size:12px;
+  background:#eef2ff;
+  color:var(--primary);
+  font-weight:700;
+}
 
-.reco{background:#ecfeff;padding:12px;border-radius:12px;border-left:5px solid var(--accent)}
+.good{color:var(--success)}
+.mid{color:var(--warning)}
+.bad{color:var(--danger)}
+
+.reco{
+  background:#ecfeff;
+  border-left:5px solid var(--accent);
+  padding:12px;
+  border-radius:12px;
+}
+
+.small{font-size:13px;color:#64748b}
 
 </style>
 </head>
@@ -150,63 +142,71 @@ button{
 <div class="topbar">
 <img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
 <div>
-<div class="title">Comparateur PER CGP Premium</div>
-<div class="subtitle">Analyse patrimoniale avancée</div>
+<div class="title">CGP SaaS - PER Intelligence Platform</div>
+<div class="subtitle">Simulation patrimoniale & optimisation retraite</div>
 </div>
 </div>
 </header>
 
 <div class="container">
 
+<div class="grid">
+
 <div class="card">
-<h2>Profil client</h2>
+<h3>Profil client</h3>
 <input id="firstname" placeholder="Prénom">
 <input id="name" placeholder="Nom">
-<input id="profession" placeholder="Profession">
+<input id="job" placeholder="Profession">
 <input id="income" type="number" placeholder="Revenus">
 <input id="age" type="number" placeholder="Âge">
 <input id="horizon" type="number" placeholder="Horizon (années)">
-<input id="monthly" type="number" placeholder="Versement mensuel">
+<input id="monthly" type="number" placeholder="Versement mensuel (€)">
 
-<button onclick="start()">Analyser</button>
+<button onclick="start()">Lancer simulation</button>
 
-<div class="loader-box" id="loader">
+<div class="loader" id="loader">
 <div class="spinner"></div>
-<div class="loader-bg"><div class="loader-bar" id="bar"></div></div>
-<div class="loader-text" id="txt">Initialisation de l’analyse patrimoniale...</div>
+<div class="bar" id="bar"></div>
+<div class="step" id="step">Initialisation...</div>
 </div>
 </div>
 
 <div class="card">
-<h2>Dashboard</h2>
+<h3>Dashboard</h3>
 <div id="kpi"></div>
 </div>
 
+</div>
+
 <div class="card">
-<h2>Classement</h2>
+<h3>Classement PER</h3>
 <div id="results"></div>
 </div>
 
 <div class="card">
-<h2>Projection retraite</h2>
+<h3>Projection retraite</h3>
 <div id="projection"></div>
+</div>
+
+<div class="card">
+<button onclick="exportPDF()">Télécharger rapport CGP PDF</button>
 </div>
 
 </div>
 
 <script>
 
-const data=[
-{name:"Generali",entry:0.9,exit:0,y1:6,y2:8.5},
-{name:"Groupama",entry:1.8,exit:1,y1:4.3,y2:5.2},
-{name:"MMA",entry:2.6,exit:1.4,y1:3.6,y2:4.2},
-{name:"April",entry:3.2,exit:2,y1:3.1,y2:3.8},
-{name:"Axa",entry:4.4,exit:2.5,y1:2.9,y2:3.5}
+const per=[
+{name:"Generali",e:0.9,x:0,r1:6,r2:8.5},
+{name:"Groupama",e:1.8,x:1,r1:4.3,r2:5.2},
+{name:"MMA",e:2.6,x:1.4,r1:3.6,r2:4.2},
+{name:"April",e:3.2,x:2,r1:3.1,r2:3.8},
+{name:"Axa",e:4.4,x:2.5,r1:2.9,r2:3.5}
 ];
 
-function score(c){
-let r=(c.y1+c.y2)/2;
-return r-(c.entry*0.6)-(c.exit*0.4);
+function score(p){
+let r=(p.r1+p.r2)/2;
+return r-(p.e*0.6)-(p.x*0.4);
 }
 
 function color(r){return r<3.5?"#dc2626":r<5?"#f59e0b":"#16a34a"}
@@ -216,35 +216,29 @@ function start(){
 document.getElementById("loader").style.display="block";
 
 let bar=document.getElementById("bar");
-let txt=document.getElementById("txt");
+let step=document.getElementById("step");
 
 let steps=[
-"Analyse du profil investisseur...",
-"Évaluation des frais...",
-"Analyse des rendements...",
-"Comparaison des assureurs...",
-"Optimisation patrimoniale...",
-"Finalisation du diagnostic..."
+"Analyse du profil...",
+"Analyse des frais...",
+"Benchmark rendement...",
+"Optimisation fiscale...",
+"Construction scoring...",
+"Finalisation CGP..."
 ];
 
-let i=0;
-let p=0;
+let i=0,p=0;
 
-let timer=setInterval(()=>{
-  p+=1.4;
+let t=setInterval(()=>{
+  p+=1.2;
   if(p>100)p=100;
 
   bar.style.width=p+"%";
 
-  if(Math.floor(p)%18===0 && i<steps.length){
-    txt.innerText=steps[i++];
-  }
+  if(Math.floor(p)%18===0 && i<steps.length){step.innerText=steps[i++];}
 
-  if(p>=100){
-    clearInterval(timer);
-    setTimeout(run,400);
-  }
-},45);
+  if(p>=100){clearInterval(t);setTimeout(run,500)}
+},35);
 }
 
 function run(){
@@ -255,47 +249,67 @@ let age=+document.getElementById("age").value;
 let income=+document.getElementById("income").value;
 let horizon=+document.getElementById("horizon").value;
 let monthly=+document.getElementById("monthly").value;
+let job=document.getElementById("job").value;
 
-let ranked=data.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
+let ranked=per.map(p=>({...p,score:score(p)})).sort((a,b)=>b.score-a.score);
 
 let best=ranked[0];
+
+// KPI
+let risk=best.score>5?"Optimisé":best.score>3?"Moyen":"Faible";
 
 document.getElementById("kpi").innerHTML=`
 <div class='kpi'>
 <div><b>Score</b><br>${best.score.toFixed(1)}/10</div>
 <div><b>Top PER</b><br>${best.name}</div>
-<div><b>Analyse</b><br>Profil optimisé</div>
+<div><b>Niveau</b><br>${risk}</div>
 </div>`;
 
+// ranking
 let html="";
-ranked.forEach((c,i)=>{
-let r=(c.y1+c.y2)/2;
-html+=`<div class='company fade'>
-<div class='rank'>${i+1}. ${c.name}</div>
-<div>Rendement: <span style='color:${color(r)}'>${c.y1}% → ${c.y2}%</span></div>
-<div>Frais: ${c.entry}% / ${c.exit}%</div>
-<div>Score: ${c.score.toFixed(2)}</div>
-</div>`;
+ranked.forEach((p,i)=>{
+let r=(p.r1+p.r2)/2;
+html+=`<div>
+<span class='badge'>#${i+1}</span> <b>${p.name}</b><br>
+<span style='color:${color(r)}'>${p.r1}% → ${p.r2}%</span><br>
+Frais: ${p.e}% / ${p.x}% | Score: ${p.score.toFixed(2)}
+</div><br>`;
 });
 
 document.getElementById("results").innerHTML=html;
 
-let years=horizon||20;
+// projection
 let r=0.06;
-let capital=monthly*12*((Math.pow(1+r,years)-1)/r);
+let capital=monthly*12*((Math.pow(1+r,horizon)-1)/r);
 
-let total=Math.round(capital);
+let final=Math.round(capital);
 
-document.getElementById("projection").innerHTML=`
+let message=`
 <div class='reco'>
-<b>Projection retraite</b><br>
-Versement: ${monthly}€/mois<br>
-Durée: ${years} ans<br>
-Capital estimé: ${total.toLocaleString()}€
+<b>Projection retraite personnalisée</b><br><br>
+Profil: ${job}<br>
+Versement mensuel: ${monthly}€<br>
+Durée: ${horizon} ans<br><br>
+<b>Capital estimé:</b> ${final.toLocaleString()} €<br><br>
+<div class='small'>Simulation indicative basée sur rendement moyen 6%</div>
 </div>`;
+
+document.getElementById("projection").innerHTML=message;
+}
+
+function exportPDF(){
+const { jsPDF } = window.jspdf;
+let doc=new jsPDF();
+
+doc.setFontSize(14);
+doc.text("Rapport CGP - PER SaaS",10,10);
+
+doc.setFontSize(10);
+doc.text(document.getElementById("results").innerText,10,20);
+
+doc.save("CGP-report.pdf");
 }
 
 </script>
 
-</body>
-</html>
+</body
