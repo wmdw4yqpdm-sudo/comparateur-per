@@ -67,27 +67,80 @@ button{
 
 .company{padding:12px;border-bottom:1px solid #eee}
 .rank{font-weight:800}
+
 .best{color:var(--success);font-weight:700}
 .medium{color:var(--warning);font-weight:700}
 .low{color:var(--danger);font-weight:700}
 
-.loader-box{text-align:center;display:none}
-.hourglass{
-  width:40px;height:40px;margin:10px auto;
-  border:4px solid var(--primary);
-  border-top:4px solid transparent;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
+/* ===== LOADER PREMIUM UPGRADE ===== */
+.loader-box{
+  display:none;
+  text-align:center;
+  margin-top:15px;
 }
+
+/* fond subtil animé */
+.loader-bg{
+  width:100%;
+  height:6px;
+  background:#e5e7eb;
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+}
+
+.loader-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--primary),var(--accent),var(--success));
+  transition:width .4s ease;
+}
+
+/* spinner premium */
+.spinner{
+  width:42px;
+  height:42px;
+  margin:12px auto;
+  border-radius:50%;
+  border:3px solid rgba(3,31,148,0.2);
+  border-top:3px solid var(--primary);
+  animation:spin 1s linear infinite;
+  position:relative;
+}
+
+.spinner:after{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border-radius:50%;
+  border:2px solid rgba(14,165,233,0.3);
+  border-top-color:var(--accent);
+  animation:spin 1.6s linear infinite reverse;
+}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.progress{height:18px;background:#e5e7eb;border-radius:20px;overflow:hidden}
-.bar{height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--accent),var(--success))}
+.loader-text{
+  margin-top:8px;
+  font-weight:600;
+  color:var(--primary-dark);
+  min-height:20px;
+}
+
+/* fade clean */
+.fade{
+  animation:fade .3s ease-in;
+}
+@keyframes fade{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
 .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .kpi div{background:#f8fafc;padding:10px;border-radius:10px;text-align:center}
 
 .reco{background:#ecfeff;padding:12px;border-radius:12px;border-left:5px solid var(--accent)}
+
 </style>
 </head>
 
@@ -113,14 +166,14 @@ button{
 <input id="income" type="number" placeholder="Revenus">
 <input id="age" type="number" placeholder="Âge">
 <input id="horizon" type="number" placeholder="Horizon (années)">
-<input id="monthly" type="number" placeholder="Versement mensuel (€)">
+<input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="start()">Analyser</button>
 
 <div class="loader-box" id="loader">
-<div class="hourglass"></div>
-<div class="progress"><div class="bar" id="bar"></div></div>
-<div id="txt">Analyse...</div>
+<div class="spinner"></div>
+<div class="loader-bg"><div class="loader-bar" id="bar"></div></div>
+<div class="loader-text" id="txt">Initialisation de l’analyse patrimoniale...</div>
 </div>
 </div>
 
@@ -161,21 +214,37 @@ function color(r){return r<3.5?"#dc2626":r<5?"#f59e0b":"#16a34a"}
 function start(){
 
 document.getElementById("loader").style.display="block";
-let b=document.getElementById("bar");
-let t=document.getElementById("txt");
-let steps=["Profil...","Frais...","Rendement...","Optimisation...","Finalisation..."];
-let i=0,p=0;
 
-// loader fluide 60s
+let bar=document.getElementById("bar");
+let txt=document.getElementById("txt");
+
+let steps=[
+"Analyse du profil investisseur...",
+"Évaluation des frais...",
+"Analyse des rendements...",
+"Comparaison des assureurs...",
+"Optimisation patrimoniale...",
+"Finalisation du diagnostic..."
+];
+
+let i=0;
+let p=0;
+
 let timer=setInterval(()=>{
-  p+=1.6; // ~60s total
+  p+=1.4;
   if(p>100)p=100;
-  b.style.width=p+"%";
 
-  if(Math.floor(p)%20===0 && i<steps.length){t.innerText=steps[i++];}
+  bar.style.width=p+"%";
 
-  if(p>=100){clearInterval(timer);setTimeout(run,400)}
-},600);
+  if(Math.floor(p)%18===0 && i<steps.length){
+    txt.innerText=steps[i++];
+  }
+
+  if(p>=100){
+    clearInterval(timer);
+    setTimeout(run,400);
+  }
+},45);
 }
 
 function run(){
@@ -195,13 +264,13 @@ document.getElementById("kpi").innerHTML=`
 <div class='kpi'>
 <div><b>Score</b><br>${best.score.toFixed(1)}/10</div>
 <div><b>Top PER</b><br>${best.name}</div>
-<div><b>Profil</b><br>Optimisation active</div>
+<div><b>Analyse</b><br>Profil optimisé</div>
 </div>`;
 
 let html="";
 ranked.forEach((c,i)=>{
 let r=(c.y1+c.y2)/2;
-html+=`<div class='company'>
+html+=`<div class='company fade'>
 <div class='rank'>${i+1}. ${c.name}</div>
 <div>Rendement: <span style='color:${color(r)}'>${c.y1}% → ${c.y2}%</span></div>
 <div>Frais: ${c.entry}% / ${c.exit}%</div>
@@ -211,21 +280,19 @@ html+=`<div class='company'>
 
 document.getElementById("results").innerHTML=html;
 
-// projection capital
 let years=horizon||20;
 let r=0.06;
 let capital=monthly*12*((Math.pow(1+r,years)-1)/r);
 
-let final=capital.toFixed(0);
+let total=Math.round(capital);
 
 document.getElementById("projection").innerHTML=`
 <div class='reco'>
 <b>Projection retraite</b><br>
 Versement: ${monthly}€/mois<br>
-Horizon: ${years} ans<br>
-Capital estimé: ${Number(final).toLocaleString()}€
+Durée: ${years} ans<br>
+Capital estimé: ${total.toLocaleString()}€
 </div>`;
-
 }
 
 </script>
