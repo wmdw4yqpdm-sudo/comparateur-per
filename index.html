@@ -98,7 +98,6 @@ button:hover{
   margin-bottom:15px;
 }
 
-/* LOADER FIX PRO */
 .loader-box{
   display:none;
   margin-top:20px;
@@ -116,7 +115,6 @@ button:hover{
   width:0%;
   height:100%;
   background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
-  transition:width 0.3s linear;
 }
 
 .loading-text{
@@ -126,23 +124,6 @@ button:hover{
   color:#031f94;
 }
 
-/* petit loader visuel */
-.spin{
-  display:inline-block;
-  width:16px;
-  height:16px;
-  border:2px solid #ccc;
-  border-top:2px solid #2563eb;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-  margin-right:6px;
-}
-
-@keyframes spin{
-  from{transform:rotate(0deg);}
-  to{transform:rotate(360deg);}
-}
-
 </style>
 </head>
 
@@ -150,11 +131,7 @@ button:hover{
 
 <header>
 <div class="topbar">
-<img 
-src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80"
-class="logo"
-alt="Alyor"
->
+<img src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80" class="logo"/>
 <div class="title">Comparateur PER</div>
 </div>
 </header>
@@ -176,7 +153,7 @@ alt="Alyor"
 <div class="progress">
 <div class="bar" id="bar"></div>
 </div>
-<div class="loading-text" id="loadingText">⏳ Analyse du profil client...</div>
+<div class="loading-text" id="loadingText">Analyse du profil client...</div>
 </div>
 
 </div>
@@ -210,27 +187,100 @@ return avg-(c.entry*0.55)-(c.exit*0.45);
 
 function startLoading(){
 
-document.getElementById("results").innerHTML="";
-document.getElementById("loaderBox").style.display="block";
+const loader=document.getElementById("loaderBox");
+const bar=document.getElementById("bar");
+const txt=document.getElementById("loadingText");
 
-let bar=document.getElementById("bar");
-let txt=document.getElementById("loadingText");
+loader.style.display="block";
 
 let progress=0;
 let i=0;
 
 const steps=[
 "Analyse du profil client...",
-"Étude des frais d'entrée...",
+"Étude des frais...",
 "Analyse des rendements...",
 "Comparaison des assureurs...",
 "Calcul du classement...",
-"Résultat prêt"
+"Terminé"
 ];
 
-let timer=setInterval(()=>{
+bar.style.width="0%";
 
-progress += 2;
+const timer=setInterval(()=>{
+
+progress+=2;
 bar.style.width=progress+"%";
 
-if(progress % 20 === 0 && i < st
+if(progress%20===0 && i<steps.length){
+  txt.innerHTML="⏳ "+steps[i];
+  i++;
+}
+
+if(progress>=100){
+  clearInterval(timer);
+  setTimeout(simulate,200);
+}
+
+},30);
+}
+
+function simulate(){
+
+document.getElementById("loaderBox").style.display="none";
+
+const firstname=document.getElementById("firstname").value||"";
+const lastname=document.getElementById("name").value||"";
+const profession=document.getElementById("profession").value||"";
+const age=document.getElementById("age").value||0;
+const income=document.getElementById("income").value||0;
+
+let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
+
+let html=`<div class="client-box">
+<strong>Client :</strong> ${firstname} ${lastname}<br>
+<strong>Profession :</strong> ${profession}<br>
+<strong>Âge :</strong> ${age}<br>
+<strong>Revenus :</strong> ${income} €
+</div>`;
+
+ranked.forEach((c,i)=>{
+
+let badge="low";
+if(c.score>5) badge="best";
+else if(c.score>3.5) badge="medium";
+
+html+=`
+<div class="company">
+<div class="rank">${i+1}. ${c.name}</div>
+<div>Rendement : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span></div>
+<div>Frais : <span class="${c.entry<2?'best':c.entry<3.5?'medium':'low'}">${c.entry}%</span> | Sortie : <span class="${c.exit<1?'best':c.exit<2?'medium':'low'}">${c.exit}%</span></div>
+<div>Score : ${c.score.toFixed(2)}</div>
+</div>`;
+
+});
+
+document.getElementById("results").innerHTML=html;
+
+const ctx=document.getElementById("chart");
+
+if(window.myChart) window.myChart.destroy();
+
+window.myChart=new Chart(ctx,{ 
+  type:"bar",
+  data:{
+    labels:ranked.map(c=>c.name),
+    datasets:[
+      {label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},
+      {label:"Frais",data:ranked.map(c=>c.entry),backgroundColor:"red"}
+    ]
+  },
+  options:{responsive:true,scales:{y:{beginAtZero:true}}}
+});
+
+}
+
+</script>
+
+</body>
+</html>
