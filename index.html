@@ -154,8 +154,15 @@ button:hover{
 
 <header>
 <div class="topbar">
-<img src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80" class="logo">
+
+<img 
+src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80"
+class="logo"
+alt="Alyor"
+>
+
 <div class="title">Comparateur PER</div>
+
 </div>
 </header>
 
@@ -178,7 +185,7 @@ button:hover{
 </div>
 
 <div class="loading-text" id="loadingText">
-<span class="spin">⏳</span> Analyse des compagnies...
+⏳ Analyse du profil client...
 </div>
 </div>
 
@@ -223,11 +230,11 @@ let progress=0;
 
 const steps=[
 "⏳ Analyse du profil client...",
-"📊 Étude des frais d'entrée...",
-"💰 Analyse des rendements...",
-"🏦 Comparaison des assureurs...",
-"📈 Calcul du classement final...",
-"✅ Résultat prêt"
+"⏳ Étude des frais d'entrée...",
+"⏳ Analyse des rendements...",
+"⏳ Comparaison des assureurs...",
+"⏳ Calcul du classement final...",
+"⏳ Résultat prêt"
 ];
 
 let i=0;
@@ -238,7 +245,7 @@ progress += 1;
 bar.style.width = progress + "%";
 
 if(progress % 20 === 0 && i < steps.length){
-txt.innerHTML=steps[i];
+txt.innerHTML = steps[i];
 i++;
 }
 
@@ -247,8 +254,8 @@ clearInterval(timer);
 setTimeout(simulate,500);
 }
 
-},1500); 
-/* ≈ 150 secondes = 2min30 */
+},1500);
+
 }
 
 function simulate(){
