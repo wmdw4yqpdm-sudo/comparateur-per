@@ -150,6 +150,18 @@ button:hover{
   color:#065f46;
 }
 
+/* 🌟 ANIMATION SCROLL PREMIUM */
+.reveal{
+  opacity:0;
+  transform: translateY(25px);
+  transition: all 0.8s ease;
+}
+
+.reveal.active{
+  opacity:1;
+  transform: translateY(0);
+}
+
 </style>
 </head>
 
@@ -258,13 +270,6 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-function projected(monthly, years, rate){
-let r=rate/100/12;
-let n=years*12;
-if(r===0) return monthly*n;
-return monthly*((Math.pow(1+r,n)-1)/r);
-}
-
 function startLoading(){
 
 const loader=document.getElementById("loaderBox");
@@ -302,6 +307,23 @@ if(progress>=100){clearInterval(timer);setTimeout(simulate,300);}
 },100);
 }
 
+function revealOnScroll(){
+  const elements=document.querySelectorAll(".card, .company, .client-box, .reco");
+
+  const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add("active");
+      }
+    });
+  },{threshold:0.1});
+
+  elements.forEach(el=>{
+    el.classList.add("reveal");
+    observer.observe(el);
+  });
+}
+
 function simulate(){
 
 document.getElementById("loaderBox").style.display="none";
@@ -317,15 +339,13 @@ let years=Math.max(65-age,0);
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
 
 let best=ranked[0];
-let capital=projected(monthly,years,best.yieldMax);
 
 let html=`<div class="client-box">
 <strong>Client :</strong> ${fullname}<br>
 <strong>Profession :</strong> ${profession}<br>
 <strong>Âge :</strong> ${age} ans<br>
 <strong>Revenus :</strong> ${income} €<br>
-<strong>Versement mensuel :</strong> ${monthly} €<br>
-<strong>Capital estimé :</strong> ${Math.round(capital).toLocaleString()} €
+<strong>Versement mensuel :</strong> ${monthly} €
 </div>`;
 
 ranked.forEach((c,i)=>{
@@ -333,24 +353,15 @@ let badge=c.score>5?"best":c.score>3.5?"medium":"low";
 html+=`
 <div class="company">
 <div class="rank">${i+1}. ${c.name}</div>
-
-<div>
-Rendement 3 ans : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span>
-</div>
-
-<div>
-Frais entrée : <span class="${c.entry<2?'best':c.entry<3.5?'medium':'low'}">${c.entry}%</span>
- | Sortie : <span class="${c.exit<1?'best':c.exit<2?'medium':'low'}">${c.exit}%</span>
-</div>
-
+<div>Rendement 3 ans : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span></div>
+<div>Frais entrée : <span class="${c.entry<2?'best':c.entry<3.5?'medium':'low'}">${c.entry}%</span> | Sortie : <span class="${c.exit<1?'best':c.exit<2?'medium':'low'}">${c.exit}%</span></div>
 <div>Score : ${c.score.toFixed(2)}</div>
 </div>`;
 });
 
 document.getElementById("results").innerHTML=html;
 
-document.getElementById("recoBox").innerHTML=
-`<div class="reco">🥇 Recommandation : ${best.name} est l’option la plus optimisée selon votre profil.</div>`;
+document.getElementById("recoBox").innerHTML=`<div class="reco">🥇 Recommandation : ${best.name}</div>`;
 
 const ctx=document.getElementById("chart");
 if(window.myChart) window.myChart.destroy();
@@ -368,6 +379,7 @@ window.myChart=new Chart(ctx,{
   options:{responsive:true,scales:{y:{beginAtZero:true}}}
 });
 
+revealOnScroll();
 }
 
 </script>
