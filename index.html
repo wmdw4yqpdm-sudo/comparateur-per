@@ -323,6 +323,7 @@ let html=`<div class="client-box">
 <strong>Client :</strong> ${fullname}<br>
 <strong>Profession :</strong> ${profession}<br>
 <strong>Âge :</strong> ${age} ans<br>
+<strong>Revenus :</strong> ${income} €<br>
 <strong>Versement mensuel :</strong> ${monthly} €<br>
 <strong>Capital estimé :</strong> ${Math.round(capital).toLocaleString()} €
 </div>`;
@@ -334,7 +335,7 @@ html+=`
 <div class="rank">${i+1}. ${c.name}</div>
 
 <div>
-Rendement : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span>
+Rendement 3 ans : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span>
 </div>
 
 <div>
