@@ -15,7 +15,7 @@ body{
   overflow-x:hidden;
 }
 
-/* 🎯 BUBBLES BACKGROUND */
+/* 🫧 BUBBLES */
 #bubbleCanvas{
   position:fixed;
   top:0;
@@ -89,10 +89,6 @@ button{
   font-size:16px;
 }
 
-button:hover{
-  background:#1e40af;
-}
-
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -104,44 +100,88 @@ button:hover{
   margin-bottom:6px;
 }
 
-.best{
-  color:#059669;
+.best{color:#059669;font-weight:bold;}
+.medium{color:#d97706;font-weight:bold;}
+.low{color:#dc2626;font-weight:bold;}
+
+/* 🧠 LOADER OVERLAY PRO */
+.loader-overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(3,31,148,0.92);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:9999;
+  color:white;
+}
+
+.loader-ring{
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,0.2);
+  border-top:3px solid white;
+  animation:spin 1s linear infinite;
+  margin-bottom:20px;
+}
+
+@keyframes spin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+
+.loader-text{
+  font-size:18px;
   font-weight:bold;
+  margin-bottom:10px;
 }
 
-.medium{
-  color:#d97706;
-  font-weight:bold;
+.loader-step{
+  font-size:13px;
+  opacity:0.8;
 }
 
-.low{
-  color:#dc2626;
-  font-weight:bold;
+.progress-bar{
+  width:300px;
+  height:6px;
+  background:rgba(255,255,255,0.2);
+  border-radius:20px;
+  margin-top:15px;
+  overflow:hidden;
 }
 
-.client-box{
-  background:#eef2ff;
-  padding:12px;
-  border-radius:8px;
-  margin-bottom:15px;
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:white;
+  transition:width 0.2s linear;
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- 🫧 CANVAS BULLES -->
 <canvas id="bubbleCanvas"></canvas>
+
+<!-- 🧠 LOADER -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">Analyse patrimoniale en cours</div>
+  <div class="loader-step" id="step">Initialisation...</div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress"></div>
+  </div>
+</div>
 
 <header>
 <div class="topbar">
-<img 
-src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80"
-class="logo"
-alt="Alyor"
->
-
+<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
 <div class="title">Comparateur PER</div>
 </div>
 </header>
@@ -154,10 +194,10 @@ alt="Alyor"
 <input id="fullname" placeholder="Nom et prénom">
 
 <select id="profession">
-<option>CARPIMKO - Infirmier / Kiné / Orthophoniste / Pédicure</option>
-<option>CIPAV - URSSAF (Ostéopathe / Psychologue / Chiropracteur / Psychomotricien / Neuropsychologue)</option>
-<option>CARCDSF - Chirurgien-dentiste / Sage-femme</option>
-<option>CARMF - Médecin</option>
+<option>CARPIMKO</option>
+<option>CIPAV-URSSAF</option>
+<option>CARCDSF</option>
+<option>CARMF</option>
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -165,7 +205,6 @@ alt="Alyor"
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="startLoading()">Simuler</button>
-
 </div>
 
 <div class="card">
@@ -183,126 +222,128 @@ alt="Alyor"
 
 <script>
 
-/* 🧠 TES DONNÉES (STRICTEMENT INCHANGÉES) */
-const companies = [
-{ name:"Generali", entry:0.95, exit:0, yieldMin:5.77, yieldMax:8.70 },
-{ name:"Groupama", entry:1.8, exit:1, yieldMin:4.3, yieldMax:5.2 },
-{ name:"MMA", entry:2.6, exit:1.4, yieldMin:3.6, yieldMax:4.2 },
-{ name:"April", entry:3.2, exit:2, yieldMin:3.1, yieldMax:3.8 },
-{ name:"Axa", entry:4.4, exit:2.5, yieldMin:2.9, yieldMax:3.5 }
+/* DATA */
+const companies=[
+{name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
+{name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
+{name:"MMA",entry:2.6,exit:1.4,yieldMin:3.6,yieldMax:4.2},
+{name:"April",entry:3.2,exit:2,yieldMin:3.1,yieldMax:3.8},
+{name:"Axa",entry:4.4,exit:2.5,yieldMin:2.9,yieldMax:3.5}
 ];
 
 function score(c){
-const avg = (c.yieldMin + c.yieldMax) / 2;
-return avg - (c.entry * 0.55) - (c.exit * 0.45);
+const avg=(c.yieldMin+c.yieldMax)/2;
+return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-/* SIMU */
+/* 🧠 LOADER PRO */
 function startLoading(){
-setTimeout(simulate, 800);
+
+const loader=document.getElementById("loader");
+const step=document.getElementById("step");
+const progress=document.getElementById("progress");
+
+loader.style.display="flex";
+
+const steps=[
+"Analyse du profil client...",
+"Étude des frais...",
+"Analyse des rendements...",
+"Comparaison des assureurs...",
+"Optimisation du classement...",
+"Finalisation du rapport..."
+];
+
+let i=0;
+let p=0;
+
+const interval=setInterval(()=>{
+
+p+=1;
+progress.style.width=p+"%";
+
+if(p%18===0 && i<steps.length){
+step.innerText=steps[i];
+i++;
 }
 
-/* RESULTATS */
+if(p>=100){
+clearInterval(interval);
+setTimeout(()=>{
+loader.style.display="none";
+simulate();
+},400);
+}
+
+},40);
+}
+
+/* RESULT */
 function simulate(){
 
-const fullname = document.getElementById("fullname").value;
-const profession = document.getElementById("profession").value;
-const age = document.getElementById("age").value;
-const income = document.getElementById("income").value;
-const monthly = document.getElementById("monthly").value;
+const fullname=document.getElementById("fullname").value;
+const profession=document.getElementById("profession").value;
+const age=document.getElementById("age").value;
+const income=document.getElementById("income").value;
+const monthly=document.getElementById("monthly").value;
 
-let ranked = companies
-.map(c => ({...c, score: score(c)}))
-.sort((a,b) => b.score - a.score);
+let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
 
-let html = `
-<div class="client-box">
-<strong>${fullname}</strong><br>
-${profession}<br>
-${age} ans - ${income}€ - ${monthly}€/mois
-</div>
-`;
+let html=`<div class="client-box">
+${fullname}<br>${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois
+</div>`;
 
 ranked.forEach((c,i)=>{
-
-let badge = "low";
-if(c.score > 5) badge = "best";
-else if(c.score > 3.5) badge = "medium";
-
-html += `
+html+=`
 <div class="company">
 <div class="rank">${i+1}. ${c.name}</div>
-
-<div>
-Rendement :
-<span class="${badge}">
-${c.yieldMin}% → ${c.yieldMax}%
-</span>
-</div>
-
-<div>
-Frais entrée :
-<span class="${c.entry < 2 ? 'best' : c.entry < 3.5 ? 'medium' : 'low'}">
-${c.entry}%
-</span>
-
-| Sortie :
-<span class="${c.exit < 1 ? 'best' : c.exit < 2 ? 'medium' : 'low'}">
-${c.exit}%
-</span>
-</div>
-
+<div>Rendement : ${c.yieldMin}% → ${c.yieldMax}%</div>
+<div>Frais entrée : ${c.entry}% | Sortie : ${c.exit}%</div>
 <div>Score : ${c.score.toFixed(2)}</div>
-
-</div>
-`;
+</div>`;
 });
 
-document.getElementById("results").innerHTML = html;
+document.getElementById("results").innerHTML=html;
 
-/* 📊 GRAPH (RESTE IDENTIQUE) */
-const ctx = document.getElementById("chart");
+/* GRAPH */
+const ctx=document.getElementById("chart");
 
 if(window.chart) window.chart.destroy();
 
-window.chart = new Chart(ctx, {
-type: "bar",
-data: {
-labels: ranked.map(c => c.name),
-datasets: [
-{ label:"Rendement", data: ranked.map(c => c.yieldMax), backgroundColor:"green" },
-{ label:"Frais entrée", data: ranked.map(c => c.entry), backgroundColor:"red" },
-{ label:"Frais sortie", data: ranked.map(c => c.exit), backgroundColor:"orange" }
+window.chart=new Chart(ctx,{
+type:"bar",
+data:{
+labels:ranked.map(c=>c.name),
+datasets:[
+{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},
+{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},
+{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}
 ]
-},
-options:{
-responsive:true,
-scales:{ y:{ beginAtZero:true } }
 }
 });
 
 }
 
-/* 🫧 BUBBLES (AJOUT SANS TOUCHER TON PRODUIT) */
-const canvas = document.getElementById("bubbleCanvas");
-const ctx = canvas.getContext("2d");
+/* 🫧 BUBBLES */
+const canvas=document.getElementById("bubbleCanvas");
+const ctx=canvas.getContext("2d");
 
 let w,h;
 function resize(){
-w = canvas.width = window.innerWidth;
-h = canvas.height = window.innerHeight;
+w=canvas.width=window.innerWidth;
+h=canvas.height=window.innerHeight;
 }
 resize();
-window.addEventListener("resize", resize);
+window.addEventListener("resize",resize);
 
-let mouse = {x:w/2,y:h/2};
-window.addEventListener("mousemove", e=>{
-mouse.x = e.clientX;
-mouse.y = e.clientY;
+let mouse={x:w/2,y:h/2};
+window.addEventListener("mousemove",e=>{
+mouse.x=e.clientX;
+mouse.y=e.clientY;
 });
 
-let bubbles = [];
-for(let i=0;i<70;i++){
+let bubbles=[];
+for(let i=0;i<60;i++){
 bubbles.push({
 x:Math.random()*w,
 y:Math.random()*h,
@@ -316,23 +357,20 @@ ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
 
-b.y -= b.v;
-if(b.y < 0){
-b.y = h;
-b.x = Math.random()*w;
-}
+b.y-=b.v;
+if(b.y<0){b.y=h;b.x=Math.random()*w;}
 
-let dx = b.x - mouse.x;
-let dy = b.y - mouse.y;
-let d = Math.sqrt(dx*dx + dy*dy);
+let dx=b.x-mouse.x;
+let dy=b.y-mouse.y;
+let d=Math.sqrt(dx*dx+dy*dy);
 
-if(d < 120){
-b.x += dx/d*2;
-b.y += dy/d*2;
+if(d<120){
+b.x+=dx/d*2;
+b.y+=dy/d*2;
 }
 
 ctx.beginPath();
-ctx.fillStyle = "rgba(37,99,235,0.15)";
+ctx.fillStyle="rgba(37,99,235,0.15)";
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
