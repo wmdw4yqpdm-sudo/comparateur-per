@@ -38,6 +38,8 @@ header{
   color:white;
   padding:12px 25px;
   box-sizing:border-box;
+  position:relative;
+  z-index:2;
 }
 
 .topbar{
@@ -52,6 +54,7 @@ header{
   background:white;
   padding:4px 8px;
   border-radius:8px;
+  object-fit:contain;
 }
 
 .title{
@@ -67,49 +70,32 @@ header{
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
 
-input,select,button{
+input,select{
   width:100%;
   padding:10px;
   margin:6px 0;
-  border-radius:6px;
   border:1px solid #ccc;
-}
-
-/* PROFIL BUTTONS */
-.profiles{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:8px;
-  margin-bottom:10px;
-}
-
-.profile-btn{
-  padding:8px;
-  background:#e5e7eb;
-  border:none;
-  cursor:pointer;
   border-radius:6px;
-}
-
-.profile-btn.active{
-  background:#2563eb;
-  color:white;
+  box-sizing:border-box;
 }
 
 button{
+  width:100%;
+  padding:12px;
   background:#2563eb;
   color:white;
   border:none;
+  border-radius:6px;
   cursor:pointer;
+  font-size:16px;
 }
 
-/* RESULT */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
   opacity:0;
-  transform:translateY(10px);
-  transition:0.4s;
+  transform:translateY(12px);
+  transition:0.4s ease;
 }
 
 .company.show{
@@ -120,6 +106,15 @@ button{
 .best{color:#059669;font-weight:bold;}
 .medium{color:#d97706;font-weight:bold;}
 .low{color:#dc2626;font-weight:bold;}
+
+.chart-box{
+  height:320px;
+}
+
+canvas{
+  width:100% !important;
+  height:100% !important;
+}
 </style>
 </head>
 
@@ -129,6 +124,7 @@ button{
 
 <header>
 <div class="topbar">
+<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
 <div class="title">Comparateur PER</div>
 </div>
 </header>
@@ -140,19 +136,33 @@ button{
 
 <input id="fullname" placeholder="Nom et prénom">
 
-<!-- PROFILS -->
-<div class="profiles">
-<button class="profile-btn" onclick="setProfile('liberal')">Libéral</button>
-<button class="profile-btn" onclick="setProfile('salarié')">Salarié</button>
-<button class="profile-btn" onclick="setProfile('medecin')">Médecin</button>
-<button class="profile-btn" onclick="setProfile('paramedical')">Paramédical</button>
-</div>
-
 <select id="profession">
+
+<optgroup label="CARPIMKO">
 <option>Kinésithérapeute</option>
+<option>Orthophoniste</option>
+<option>Orthoptiste</option>
+<option>Podologue</option>
+</optgroup>
+
+<optgroup label="CIPAV - URSSAF">
 <option>Ostéopathe</option>
-<option>Médecin</option>
+<option>Psychomotricien</option>
+<option>Chiropracteur</option>
+<option>Psychologue</option>
+<option>Neuropsychologue</option>
+</optgroup>
+
+<optgroup label="CARCDSF">
 <option>Sage-femme</option>
+<option>Chirurgien-dentiste</option>
+</optgroup>
+
+<optgroup label="CARMF">
+<option>Médecin généraliste</option>
+<option>Médecin spécialiste</option>
+</optgroup>
+
 </select>
 
 <input id="age" type="number" placeholder="Âge">
@@ -168,27 +178,19 @@ button{
 </div>
 
 <div class="card">
-<h2>Projection retraite</h2>
-<div id="retirement"></div>
+<h2>Graphique</h2>
+<div class="chart-box"><canvas id="chart"></canvas></div>
 </div>
 
+<!-- 🔥 AJOUT RETRAITE -->
 <div class="card">
-<h2>Recommandation</h2>
-<div id="advice"></div>
+<h2>Projection retraite</h2>
+<div id="retirement"></div>
 </div>
 
 </div>
 
 <script>
-
-/* PROFIL SYSTEM */
-let profile="liberal";
-
-function setProfile(p){
-profile=p;
-document.querySelectorAll(".profile-btn").forEach(b=>b.classList.remove("active"));
-event.target.classList.add("active");
-}
 
 /* DATA */
 const companies=[
@@ -211,6 +213,7 @@ let ranked=companies.map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
 
 document.getElementById("results").innerHTML="";
+document.getElementById("retirement").innerHTML="";
 
 ranked.forEach((c,i)=>{
 
@@ -226,7 +229,9 @@ let yield=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
 div.innerHTML=`
 <strong>${i+1}. ${c.name}</strong><br>
 Rendement : <span class="${yield}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
-Frais : <span class="${entry}">${c.entry}%</span>
+Frais entrée : <span class="${entry}">${c.entry}%</span>
+| Sortie : <span class="${exit}">${c.exit}%</span><br>
+Score : ${c.score.toFixed(2)}
 `;
 
 document.getElementById("results").appendChild(div);
@@ -235,46 +240,58 @@ setTimeout(()=>div.classList.add("show"),50);
 },i*120);
 });
 
-/* RETRAITE */
+/* CHART */
+setTimeout(()=>{
+
+new Chart(document.getElementById("chart"),{
+type:"bar",
+data:{
+labels:ranked.map(c=>c.name),
+datasets:[
+{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"#22c55e"},
+{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"#ef4444"}
+]
+},
+options:{responsive:true,maintainAspectRatio:false}
+});
+
+},400);
+
+/* 🔥 PROJECTION RETRAITE */
 setTimeout(()=>{
 
 const age=parseInt(document.getElementById("age").value||35);
 const monthly=parseFloat(document.getElementById("monthly").value||200);
 
-const years=65-age;
-const avgYield=ranked.reduce((a,b)=>a+((b.yieldMin+b.yieldMax)/2),0)/ranked.length/100;
+const retirementAge=65;
+const years=retirementAge-age;
+
+const avgYield = ranked.reduce((a,b)=>a+((b.yieldMin+b.yieldMax)/2),0)/ranked.length/100;
 
 let capital=0;
+
 for(let i=0;i<years;i++){
 capital=(capital+(monthly*12))*(1+avgYield);
 }
 
 const rente=capital*0.045/12;
 
-document.getElementById("retirement").innerHTML=
-`Capital : ${capital.toFixed(0)} €<br>Rente : ${rente.toFixed(0)} €/mois`;
-
-},800);
-
-/* CONSEIL AUTO */
-setTimeout(()=>{
-
-let best=ranked[0];
-
-document.getElementById("advice").innerHTML=
-`👉 Profil ${profile}<br>
-✔ Meilleur choix : <b>${best.name}</b><br>
-✔ Optimisation frais + rendement équilibré`;
+document.getElementById("retirement").innerHTML=`
+<strong>Âge de départ :</strong> ${retirementAge} ans<br>
+<strong>Capital estimé :</strong> ${capital.toFixed(0)} €<br>
+<strong>Rente mensuelle :</strong> ${rente.toFixed(0)} € / mois
+`;
 
 },900);
 
 }
 
-/* BUBBLES SIMPLIFIÉ */
+/* 🫧 BULLES */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
-let w=window.innerWidth,h=window.innerHeight;
+let w=window.innerWidth;
+let h=window.innerHeight;
 
 function resize(){
 w=window.innerWidth;
@@ -286,18 +303,33 @@ resize();
 window.addEventListener("resize",resize);
 
 let bubbles=[];
-for(let i=0;i<70;i++){
-bubbles.push({x:Math.random()*w,y:Math.random()*h,r:3+Math.random()*4,vy:0.3+Math.random()});
+
+function createBubbles(){
+bubbles=[];
+for(let i=0;i<80;i++){
+bubbles.push({
+x:Math.random()*w,
+y:Math.random()*h,
+r:Math.random()*5+2,
+vy:Math.random()*0.5+0.2
+});
 }
+}
+createBubbles();
+
+const colors=["#2563eb","#06b6d4","#22c55e","#94a3b8"];
 
 function animate(){
 ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
 b.y-=b.vy;
-if(b.y<0){b.y=h;b.x=Math.random()*w;}
+if(b.y<0){
+b.y=h;
+b.x=Math.random()*w;
+}
 ctx.beginPath();
-ctx.fillStyle="#60a5fa";
+ctx.fillStyle=colors[Math.floor(b.x%colors.length)];
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
