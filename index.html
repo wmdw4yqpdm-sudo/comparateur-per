@@ -150,16 +150,16 @@ button:hover{
   color:#065f46;
 }
 
-/* 🌟 ANIMATION SCROLL PREMIUM */
+/* ANIMATION SCROLL */
 .reveal{
   opacity:0;
-  transform: translateY(25px);
-  transition: all 0.8s ease;
+  transform:translateY(25px);
+  transition:all 0.8s ease;
 }
 
 .reveal.active{
   opacity:1;
-  transform: translateY(0);
+  transform:translateY(0);
 }
 
 </style>
@@ -271,7 +271,6 @@ return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
 function startLoading(){
-
 const loader=document.getElementById("loaderBox");
 const bar=document.getElementById("bar");
 const txt=document.getElementById("loadingText");
@@ -303,26 +302,23 @@ if(stepIndex!==i && stepIndex<steps.length){
 }
 
 if(progress>=100){clearInterval(timer);setTimeout(simulate,300);}
-
 },100);
 }
 
 function revealOnScroll(){
-  const elements=document.querySelectorAll(".card, .company, .client-box, .reco");
+const observer=new IntersectionObserver((entries)=>{
+entries.forEach(entry=>{
+if(entry.isIntersecting){entry.target.classList.add("active");}
+});
+},{threshold:0.15});
 
-  const observer=new IntersectionObserver((entries)=>{
-    entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        entry.target.classList.add("active");
-      }
-    });
-  },{threshold:0.1});
-
-  elements.forEach(el=>{
-    el.classList.add("reveal");
-    observer.observe(el);
-  });
+document.querySelectorAll(".card, .company, .client-box, .reco").forEach(el=>{
+el.classList.add("reveal");
+observer.observe(el);
+});
 }
+
+window.addEventListener("load",revealOnScroll);
 
 function simulate(){
 
@@ -379,7 +375,7 @@ window.myChart=new Chart(ctx,{
   options:{responsive:true,scales:{y:{beginAtZero:true}}}
 });
 
-revealOnScroll();
+setTimeout(revealOnScroll,50);
 }
 
 </script>
