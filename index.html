@@ -90,6 +90,43 @@ button{
   font-size:16px;
 }
 
+/* 🔥 LOADER STYLE PREMIUM */
+#loaderContainer{
+  display:none;
+  margin-top:15px;
+}
+
+.loader-bg{
+  height:14px;
+  background:#e5e7eb;
+  border-radius:30px;
+  overflow:hidden;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,0.08);
+}
+
+#loaderBar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
+  background-size:200% 100%;
+  animation:move 2s linear infinite;
+  transition:width 0.2s linear;
+  border-radius:30px;
+}
+
+@keyframes move{
+  0%{background-position:0% 0%}
+  100%{background-position:200% 0%}
+}
+
+.loader-text{
+  text-align:center;
+  font-size:13px;
+  margin-top:8px;
+  color:#374151;
+}
+
+/* RESULT */
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
@@ -170,6 +207,16 @@ canvas{
 <input id="monthly" type="number" placeholder="Versement mensuel">
 
 <button onclick="simulate()">Simuler</button>
+
+<div id="loaderContainer">
+  <div class="loader-bg">
+    <div id="loaderBar"></div>
+  </div>
+  <div id="loaderText" class="loader-text">
+    Simulation d’un mois de marché financier...
+  </div>
+</div>
+
 </div>
 
 <div class="card">
@@ -180,12 +227,6 @@ canvas{
 <div class="card">
 <h2>Graphique</h2>
 <div class="chart-box"><canvas id="chart"></canvas></div>
-</div>
-
-<!-- 🔥 AJOUT RETRAITE -->
-<div class="card">
-<h2>Projection retraite</h2>
-<div id="retirement"></div>
 </div>
 
 </div>
@@ -209,11 +250,43 @@ return avg-(c.entry*0.55)-(c.exit*0.45);
 /* SIMULATION */
 function simulate(){
 
+document.getElementById("loaderContainer").style.display="block";
+document.getElementById("results").innerHTML="";
+
+const messages=[
+"Analyse des marchés sur 30 jours...",
+"Simulation des fluctuations obligataires...",
+"Étude des frais d’entrée...",
+"Projection des rendements nets...",
+"Comparaison des assureurs...",
+"Optimisation du classement...",
+"Finalisation des résultats..."
+];
+
+let bar=document.getElementById("loaderBar");
+let text=document.getElementById("loaderText");
+
+let duration=60000; // 60 sec
+let start=Date.now();
+
+let interval=setInterval(()=>{
+
+let elapsed=Date.now()-start;
+let progress=Math.min((elapsed/duration)*100,100);
+
+bar.style.width=progress+"%";
+
+let index=Math.floor((progress/100)*messages.length);
+text.innerText=messages[index] || "Finalisation...";
+
+if(progress>=100){
+clearInterval(interval);
+
+document.getElementById("loaderContainer").style.display="none";
+
+/* RESULT */
 let ranked=companies.map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
-
-document.getElementById("results").innerHTML="";
-document.getElementById("retirement").innerHTML="";
 
 ranked.forEach((c,i)=>{
 
@@ -238,6 +311,7 @@ document.getElementById("results").appendChild(div);
 setTimeout(()=>div.classList.add("show"),50);
 
 },i*120);
+
 });
 
 /* CHART */
@@ -257,36 +331,11 @@ options:{responsive:true,maintainAspectRatio:false}
 
 },400);
 
-/* 🔥 PROJECTION RETRAITE */
-setTimeout(()=>{
-
-const age=parseInt(document.getElementById("age").value||35);
-const monthly=parseFloat(document.getElementById("monthly").value||200);
-
-const retirementAge=65;
-const years=retirementAge-age;
-
-const avgYield = ranked.reduce((a,b)=>a+((b.yieldMin+b.yieldMax)/2),0)/ranked.length/100;
-
-let capital=0;
-
-for(let i=0;i<years;i++){
-capital=(capital+(monthly*12))*(1+avgYield);
+}
+},50);
 }
 
-const rente=capital*0.045/12;
-
-document.getElementById("retirement").innerHTML=`
-<strong>Âge de départ :</strong> ${retirementAge} ans<br>
-<strong>Capital estimé :</strong> ${capital.toFixed(0)} €<br>
-<strong>Rente mensuelle :</strong> ${rente.toFixed(0)} € / mois
-`;
-
-},900);
-
-}
-
-/* 🫧 BULLES */
+/* 🫧 BULLES (inchangé) */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
