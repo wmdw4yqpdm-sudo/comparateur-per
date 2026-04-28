@@ -140,6 +140,16 @@ button:hover{
   100%{transform:rotateX(360deg) rotateY(360deg) rotateZ(360deg);}
 }
 
+.reco{
+  background:#f0fdf4;
+  border:1px solid #22c55e;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  font-weight:bold;
+  color:#065f46;
+}
+
 </style>
 </head>
 
@@ -223,6 +233,7 @@ button:hover{
 <div class="card">
 <h2>Classement</h2>
 <div id="results"></div>
+<div id="recoBox"></div>
 </div>
 
 <div class="card">
@@ -242,22 +253,16 @@ const companies = [
 { name:"Axa", entry:4.4, exit:2.5, yieldMin:2.9, yieldMax:3.5 }
 ];
 
-// pondération métier
-const professionWeight = {
-"Médecin généraliste":1.3,
-"Spécialiste médical":1.3,
-"Chirurgien-dentiste":1.25,
-"Pharmacien":1.2,
-"Infirmier libéral":1.15,
-"Masseur-kinésithérapeute":1.1,
-"Ostéopathe":1.1,
-"Psychologue":1.05,
-"Neuropsychologue":1.05
-};
-
-function score(c, weight){
+function score(c){
 const avg=(c.yieldMin+c.yieldMax)/2;
-return (avg-(c.entry*0.55)-(c.exit*0.45)) * (weight||1);
+return avg-(c.entry*0.55)-(c.exit*0.45);
+}
+
+function projected(monthly, years, rate){
+let r=rate/100/12;
+let n=years*12;
+if(r===0) return monthly*n;
+return monthly*((Math.pow(1+r,n)-1)/r);
 }
 
 function startLoading(){
@@ -275,8 +280,8 @@ const steps=[
 "Analyse du profil client...",
 "Étude des frais...",
 "Analyse des rendements...",
-"Optimisation selon la profession...",
-"Calcul du capital projeté...",
+"Optimisation du scénario...",
+"Projection retraite...",
 "Finalisation du rapport..."
 ];
 
@@ -292,10 +297,7 @@ if(stepIndex!==i && stepIndex<steps.length){
   txt.innerHTML="⏳ "+steps[i];
 }
 
-if(progress>=100){
-  clearInterval(timer);
-  setTimeout(simulate,300);
-}
+if(progress>=100){clearInterval(timer);setTimeout(simulate,300);}
 
 },100);
 }
@@ -310,36 +312,35 @@ const age=parseInt(document.getElementById("age").value)||0;
 const income=parseFloat(document.getElementById("income").value)||0;
 const monthly=parseFloat(document.getElementById("monthly").value)||0;
 
-let weight=professionWeight[profession]||1;
-let years=65-age;
+let years=Math.max(65-age,0);
 
-let ranked=companies.map(c=>({...c,score:score(c,weight)})).sort((a,b)=>b.score-a.score);
+let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
+
+let best=ranked[0];
+let capital=projected(monthly,years,best.yieldMax);
 
 let html=`<div class="client-box">
 <strong>Client :</strong> ${fullname}<br>
 <strong>Profession :</strong> ${profession}<br>
 <strong>Âge :</strong> ${age} ans<br>
-<strong>Revenus :</strong> ${income} €<br>
 <strong>Versement mensuel :</strong> ${monthly} €<br>
-<strong>Projection retraite :</strong> ~${Math.round(monthly*12*years*1.35)} €</div>`;
+<strong>Capital estimé :</strong> ${Math.round(capital).toLocaleString()} €
+</div>`;
 
 ranked.forEach((c,i)=>{
-
-let badge="low";
-if(c.score>5) badge="best";
-else if(c.score>3.5) badge="medium";
-
+let badge=c.score>5?"best":c.score>3.5?"medium":"low";
 html+=`
 <div class="company">
 <div class="rank">${i+1}. ${c.name}</div>
 <div>Rendement : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span></div>
-<div>Frais : <span class="${c.entry<2?'best':c.entry<3.5?'medium':'low'}">${c.entry}%</span> | Sortie : <span class="${c.exit<1?'best':c.exit<2?'medium':'low'}">${c.exit}%</span></div>
 <div>Score : ${c.score.toFixed(2)}</div>
 </div>`;
-
 });
 
 document.getElementById("results").innerHTML=html;
+
+let reco=document.getElementById("recoBox");
+reco.innerHTML=`<div class="reco">🥇 Recommandation : ${best.name} est l’option la plus optimisée selon votre profil.</div>`;
 
 const ctx=document.getElementById("chart");
 if(window.myChart) window.myChart.destroy();
