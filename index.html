@@ -12,6 +12,7 @@ body{
   font-family:Arial, sans-serif;
   margin:0;
   background:#f4f6f8;
+  overflow-x:hidden;
 }
 
 header{
@@ -42,6 +43,8 @@ header{
   max-width:950px;
   margin:auto;
   padding:20px;
+  position:relative;
+  z-index:2;
 }
 
 .card{
@@ -50,9 +53,6 @@ header{
   margin-bottom:20px;
   border-radius:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
-  transform-style:preserve-3d;
-  transition:transform 0.15s ease, box-shadow 0.2s ease;
-  will-change: transform;
 }
 
 input, select{
@@ -75,15 +75,11 @@ button{
   font-size:16px;
 }
 
-button:hover{
-  background:#1e40af;
-}
+button:hover{background:#1e40af;}
 
 .company{
   padding:12px;
   border-bottom:1px solid #eee;
-  transform-style:preserve-3d;
-  transition:transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .rank{
@@ -103,75 +99,14 @@ button:hover{
   margin-bottom:15px;
 }
 
-.loader-box{
-  display:none;
-  margin-top:20px;
-}
-
-.loader-core{
-  width:70px;
-  height:70px;
-  margin:10px auto;
-  position:relative;
-}
-
-.loader-ring{
+/* BUBBLES BACKGROUND */
+#bubble-canvas{
+  position:fixed;
+  top:0;
+  left:0;
   width:100%;
   height:100%;
-  border-radius:50%;
-  border:3px solid rgba(37,99,235,0.2);
-  border-top:3px solid #2563eb;
-  animation:spin 1s linear infinite;
-}
-
-.loader-center{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  font-weight:bold;
-  font-size:12px;
-  color:#031f94;
-}
-
-.loading-text{
-  margin-top:10px;
-  text-align:center;
-  font-weight:bold;
-  color:#031f94;
-}
-
-.loading-sub{
-  text-align:center;
-  margin-top:6px;
-  font-size:13px;
-  color:#6b7280;
-}
-
-@keyframes spin{
-  from{transform:rotate(0deg);}
-  to{transform:rotate(360deg);}
-}
-
-.reco{
-  background:#f0fdf4;
-  border:1px solid #22c55e;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
-  font-weight:bold;
-  color:#065f46;
-}
-
-.reveal{
-  opacity:0;
-  transform:translateY(25px);
-  transition:all 0.8s ease;
-}
-
-.reveal.active{
-  opacity:1;
-  transform:translateY(0);
+  z-index:0;
 }
 
 </style>
@@ -179,9 +114,11 @@ button:hover{
 
 <body>
 
+<canvas id="bubble-canvas"></canvas>
+
 <header>
 <div class="topbar">
-<img src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80" class="logo"/>
+<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80"/>
 <div class="title">Comparateur PER</div>
 </div>
 </header>
@@ -190,37 +127,20 @@ button:hover{
 
 <div class="card">
 <h2>Profil utilisateur</h2>
-
 <input id="fullname" placeholder="Nom et prénom">
-
 <select id="profession">
-<option value="">Sélectionnez une profession</option>
 <option>Infirmier libéral</option>
-<option>Masseur-kinésithérapeute</option>
+<option>Kinésithérapeute</option>
 <option>Orthophoniste</option>
-<option>Architecte</option>
-<option>Consultant</option>
 <option>Ostéopathe</option>
 <option>Psychologue</option>
 <option>Chirurgien-dentiste</option>
 <option>Médecin</option>
 </select>
-
 <input id="age" type="number" placeholder="Âge">
 <input id="income" type="number" placeholder="Revenus annuels">
 <input id="monthly" type="number" placeholder="Versement mensuel">
-
 <button onclick="startLoading()">Simuler</button>
-
-<div class="loader-box" id="loaderBox">
-<div class="loader-core">
-  <div class="loader-ring"></div>
-  <div class="loader-center">CGP</div>
-</div>
-<div class="loading-text" id="loadingText">Analyse du profil patrimonial...</div>
-<div class="loading-sub" id="loadingSub">Initialisation...</div>
-</div>
-
 </div>
 
 <div class="card">
@@ -230,7 +150,7 @@ button:hover{
 </div>
 
 <div class="card">
-<h2>Graphique comparatif</h2>
+<h2>Graphique</h2>
 <canvas id="chart"></canvas>
 </div>
 
@@ -238,6 +158,7 @@ button:hover{
 
 <script>
 
+/* DATA */
 const companies=[
 {name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
 {name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
@@ -251,112 +172,80 @@ const avg=(c.yieldMin+c.yieldMax)/2;
 return avg-(c.entry*0.55)-(c.exit*0.45);
 }
 
-function startLoading(){
-const loader=document.getElementById("loaderBox");
-const txt=document.getElementById("loadingText");
-const sub=document.getElementById("loadingSub");
-loader.style.display="block";
-
-let start=Date.now();
-let duration=60000;
-
-const steps=[
-"Analyse du profil...",
-"Analyse frais...",
-"Analyse rendement...",
-"Comparaison assureurs...",
-"Optimisation stratégie...",
-"Finalisation rapport..."
-];
-
-let i=0;
-
-let timer=setInterval(()=>{
-let progress=Math.min(((Date.now()-start)/duration)*100,100);
-
-let stepIndex=Math.floor((progress/100)*steps.length);
-if(stepIndex!==i && stepIndex<steps.length){
-  i=stepIndex;
-  txt.innerHTML="🧠 "+steps[i];
-}
-
-sub.innerHTML="Traitement en cours...";
-
-if(progress>=100){clearInterval(timer);setTimeout(simulate,300);}
-},100);
-}
+/* SIMULATION */
+function startLoading(){simulate();}
 
 function simulate(){
-
-document.getElementById("loaderBox").style.display="none";
-
-const fullname=document.getElementById("fullname").value||"";
-const profession=document.getElementById("profession").value||"";
-const age=parseInt(document.getElementById("age").value)||0;
-const income=parseFloat(document.getElementById("income").value)||0;
-const monthly=parseFloat(document.getElementById("monthly").value)||0;
+const fullname=document.getElementById("fullname").value;
+const profession=document.getElementById("profession").value;
+const age=document.getElementById("age").value;
+const income=document.getElementById("income").value;
+const monthly=document.getElementById("monthly").value;
 
 let ranked=companies.map(c=>({...c,score:score(c)})).sort((a,b)=>b.score-a.score);
-let best=ranked[0];
 
-let html=`<div class="client-box">
-<strong>Client :</strong> ${fullname}<br>
-<strong>Profession :</strong> ${profession}<br>
-<strong>Âge :</strong> ${age} ans<br>
-<strong>Revenus :</strong> ${income} €<br>
-<strong>Versement mensuel :</strong> ${monthly} €
-</div>`;
+let html=`<div class='client-box'>${fullname} - ${profession}<br>${age} ans - ${income}€ - ${monthly}€/mois</div>`;
 
 ranked.forEach((c,i)=>{
-let badge=c.score>5?"best":c.score>3.5?"medium":"low";
-html+=`<div class="company">
-<div class="rank">${i+1}. ${c.name}</div>
-<div>Rendement : <span class="${badge}">${c.yieldMin}% → ${c.yieldMax}%</span></div>
-<div>Frais entrée : <span class="${c.entry<2?'best':c.entry<3.5?'medium':'low'}">${c.entry}%</span> | Sortie : <span class="${c.exit<1?'best':c.exit<2?'medium':'low'}">${c.exit}%</span></div>
-<div>Score : ${c.score.toFixed(2)}</div>
-</div>`;
+html+=`<div class='company'>${i+1}. ${c.name} | Score ${c.score.toFixed(2)}</div>`;
 });
 
 document.getElementById("results").innerHTML=html;
-document.getElementById("recoBox").innerHTML=`<div class="reco">🥇 Recommandation : ${best.name}</div>`;
 
 const ctx=document.getElementById("chart");
-if(window.myChart) window.myChart.destroy();
-
-window.myChart=new Chart(ctx,{type:"bar",data:{labels:ranked.map(c=>c.name),datasets:[{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"},{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"red"},{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"orange"}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
-
-setTimeout(enableTilt,100);
-setTimeout(revealOnScroll,100);
+if(window.chart)window.chart.destroy();
+window.chart=new Chart(ctx,{type:"bar",data:{labels:ranked.map(c=>c.name),datasets:[{label:"Rendement",data:ranked.map(c=>c.yieldMax),backgroundColor:"green"}]}});
 }
 
-function revealOnScroll(){
-const observer=new IntersectionObserver((entries)=>{
-entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add("active");});
-},{threshold:0.15});
+/* BUBBLES INTERACTIVES */
+const canvas=document.getElementById("bubble-canvas");
+const ctx=canvas.getContext("2d");
 
-document.querySelectorAll(".card,.company,.client-box,.reco").forEach(el=>{
-el.classList.add("reveal");observer.observe(el);
-});
+let w,h;
+function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;}
+window.addEventListener("resize",resize);
+resize();
+
+let mouse={x:w/2,y:h/2};
+window.addEventListener("mousemove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+
+let bubbles=[];
+for(let i=0;i<60;i++){
+  bubbles.push({
+    x:Math.random()*w,
+    y:Math.random()*h,
+    r:Math.random()*6+2,
+    vy:Math.random()*0.5+0.2
+  });
 }
 
-function enableTilt(){
-const cards=document.querySelectorAll(".card,.company");
-cards.forEach(card=>{
-card.addEventListener("mousemove",(e)=>{
-const r=card.getBoundingClientRect();
-const x=e.clientX-r.left;
-const y=e.clientY-r.top;
-const rx=((y-r.height/2)/(r.height/2))*-6;
-const ry=((x-r.width/2)/(r.width/2))*6;
-card.style.transform=`perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
-});
-card.addEventListener("mouseleave",()=>{
-card.style.transform="perspective(1000px) rotateX(0) rotateY(0) scale(1)";
-});
-});
+function animate(){
+ctx.clearRect(0,0,w,h);
+
+for(let b of bubbles){
+
+// mouvement vertical
+b.y-=b.vy;
+if(b.y<0){b.y=h; b.x=Math.random()*w;}
+
+// attraction souris
+let dx=b.x-mouse.x;
+let dy=b.y-mouse.y;
+let dist=Math.sqrt(dx*dx+dy*dy);
+if(dist<120){
+  b.x+=dx/dist*1.5;
+  b.y+=dy/dist*1.5;
 }
 
-window.addEventListener("load",revealOnScroll);
+ctx.beginPath();
+ctx.fillStyle="rgba(37,99,235,0.15)";
+ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+ctx.fill();
+}
+
+requestAnimationFrame(animate);
+}
+animate();
 
 </script>
 
