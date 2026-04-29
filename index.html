@@ -11,7 +11,7 @@
 html,body{
   margin:0;
   padding:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial,sans-serif;
   background:#f4f6f8;
   overflow-x:hidden;
 }
@@ -51,18 +51,17 @@ header{
   background:white;
   padding:4px;
   border-radius:8px;
-  object-fit:contain;
 }
 
 .title{font-size:20px;font-weight:bold;}
-.subtitle{font-size:12px;opacity:0.85;}
+.subtitle{font-size:12px;opacity:.85;}
 
 .card{
   background:white;
   padding:18px;
   margin-bottom:20px;
   border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
 }
 
 input,select{
@@ -82,27 +81,14 @@ button{
   border-radius:6px;
   font-size:16px;
   cursor:pointer;
-}
-
-#loaderContainer{display:none;margin-top:15px;}
-
-.loader-bg{
-  height:14px;
-  background:#e5e7eb;
-  border-radius:30px;
-  overflow:hidden;
-}
-
-#loaderBar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
-}
-
-.loader-text{
-  text-align:center;
-  font-size:13px;
   margin-top:8px;
+}
+
+button:hover{opacity:.95;}
+
+#btnMore{
+  display:none;
+  background:#0f766e;
 }
 
 .company{
@@ -110,7 +96,7 @@ button{
   border-bottom:1px solid #eee;
   opacity:0;
   transform:translateY(10px);
-  transition:0.4s;
+  transition:.4s;
 }
 
 .company.show{
@@ -127,8 +113,8 @@ button{
 }
 
 canvas{
-  width:100% !important;
-  height:100% !important;
+  width:100%!important;
+  height:100%!important;
 }
 </style>
 </head>
@@ -152,153 +138,127 @@ canvas{
 <div class="card">
 <h2>Profil utilisateur</h2>
 
-<input id="fullname" placeholder="Nom et prénom">
-
-<select id="profession">
+<input placeholder="Nom et prénom">
+<select>
 <option>Kinésithérapeute</option>
 <option>Ostéopathe</option>
 <option>Médecin généraliste</option>
 <option>Chirurgien-dentiste</option>
 </select>
 
-<input id="age" type="number" placeholder="Âge">
-<input id="income" type="number" placeholder="Revenus annuels">
-<input id="monthly" type="number" placeholder="Versement mensuel">
+<input type="number" placeholder="Âge">
+<input type="number" placeholder="Revenus annuels">
+<input type="number" placeholder="Versement mensuel">
 
 <button onclick="simulate()">Lancer l’analyse</button>
-
-<div id="loaderContainer">
-  <div class="loader-bg">
-    <div id="loaderBar"></div>
-  </div>
-  <div id="loaderText" class="loader-text">
-    Accès au comparateur privé sécurisé...
-  </div>
-</div>
-
 </div>
 
 <div class="card">
 <h2>Sélection prioritaire</h2>
+
 <div id="results"></div>
+
+<button id="btnMore" onclick="showMore()">Afficher plus</button>
 </div>
 
 <div class="card">
 <h2>Projection retraite</h2>
 <div class="chart-box">
-  <canvas id="chart"></canvas>
+<canvas id="chart"></canvas>
 </div>
 </div>
 
 </div>
 
 <script>
-
-/* =========================
-   SHUFFLE
-========================= */
 function shuffle(array){
-  for(let i=array.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [array[i],array[j]]=[array[j],array[i]];
-  }
-  return array;
+for(let i=array.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[array[i],array[j]]=[array[j],array[i]];
+}
+return array;
 }
 
-/* =========================
-   COMPAGNIES BASE
-========================= */
-const companiesBase=[
-{name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
-{name:"Groupama",entry:1.8,exit:1,yieldMin:4.3,yieldMax:5.2},
-{name:"MMA",entry:2.6,exit:1.4,yieldMin:3.6,yieldMax:4.2},
-{name:"April",entry:3.2,exit:2,yieldMin:3.1,yieldMax:3.8},
-{name:"Axa",entry:4.4,exit:2.5,yieldMin:2.9,yieldMax:3.5}
+/* ===============================
+32 COMPAGNIES
+================================= */
+const names = [
+"Generali","Groupama","MMA","April","AXA","SwissLife","Allianz","Aviva",
+"Malakoff","AG2R","CNP","MACSF","Apicil","Cardif","Suravenir","Spirica",
+"Matmut","Maaf","GMF","Gan","Abeille","SMABTP","Oradea","Primonial",
+"La Mondiale","Sogecap","BPCE Vie","Intencial","Neuflize","Monceau",
+"UAF Life","Patrimoine Vie"
 ];
 
-let companies=[];
+let allCompanies = [];
+let ranked = [];
+let visibleCount = 0;
+let chart;
 
-/* =========================
-   SCORE
-========================= */
-function score(c){
-const avg=(c.yieldMin+c.yieldMax)/2;
-return avg-(c.entry*0.55)-(c.exit*0.45);
-}
+/* ===============================
+GENERATION COHERENTE
+================================= */
+function buildCompanies(){
 
-/* =========================
-   CHART
-========================= */
-function renderChart(ranked){
-new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:ranked.map(c=>c.name),
-datasets:[
-{label:"Rendement max",data:ranked.map(c=>c.yieldMax),backgroundColor:"#22c55e"},
-{label:"Frais entrée",data:ranked.map(c=>c.entry),backgroundColor:"#ef4444"},
-{label:"Frais sortie",data:ranked.map(c=>c.exit),backgroundColor:"#f97316"}
-]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
+allCompanies = [];
+
+for(let i=0;i<32;i++){
+
+let entry = +(0.80 + (i*0.13)).toFixed(2);
+let exit  = +(0.20 + (i*0.14)).toFixed(2);
+
+if(entry>5) entry=5;
+if(exit>5) exit=5;
+
+/* rendement baisse progressivement */
+let maxYield = +(8.2 - (i*0.16)).toFixed(2);
+if(maxYield<2.4) maxYield=2.4;
+
+let minYield = +(maxYield - (0.8 + Math.random()*1)).toFixed(2);
+if(minYield<1.5) minYield=1.5;
+
+allCompanies.push({
+name:names[i],
+entry,
+exit,
+yieldMin:minYield,
+yieldMax:maxYield
 });
 }
 
-/* =========================
-   SIMULATION
-========================= */
-function simulate(){
-
-/* 🔥 ordre aléatoire à chaque clic */
-companies = [
-  companiesBase[0], // Generali toujours 1er
-  ...shuffle(companiesBase.slice(1))
-];
-
-document.getElementById("loaderContainer").style.display="block";
-document.getElementById("results").innerHTML="";
-
-let progress=0;
-let stepIndex=0;
-
-const steps=[
-"Accès sécurisé au comparateur privé...",
-"Vérification des accès partenaires agréés...",
-"Chargement des grilles exclusives assureurs...",
-"Simulation des conditions de marché...",
-"Analyse des frais réels négociés...",
-"Croisement des données partenaires...",
-"Finalisation de votre sélection..."
-];
-
-let loaderText=document.getElementById("loaderText");
-
-let interval=setInterval(()=>{
-
-progress += (100/900);
-document.getElementById("loaderBar").style.width=progress+"%";
-
-let newStep=Math.floor((progress/100)*steps.length);
-
-if(newStep!==stepIndex && newStep<steps.length){
-stepIndex=newStep;
-loaderText.innerText=steps[stepIndex];
+/* Generali toujours forte */
+allCompanies[0] = {
+name:"Generali",
+entry:0.95,
+exit:0,
+yieldMin:5.77,
+yieldMax:8.70
+};
 }
 
-if(progress>=100){
-clearInterval(interval);
+function score(c){
+let avg=(c.yieldMin+c.yieldMax)/2;
+return avg-(c.entry*0.55)-(c.exit*0.45);
+}
 
-document.getElementById("loaderContainer").style.display="none";
+function simulate(){
 
-let ranked=companies.map(c=>({...c,score:score(c)}))
+document.getElementById("results").innerHTML="";
+document.getElementById("btnMore").style.display="none";
+
+buildCompanies();
+
+ranked = shuffle(allCompanies)
+.map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
 
-ranked.forEach((c,i)=>{
+visibleCount = 0;
 
-setTimeout(()=>{
+showMore();
+renderChart();
+}
+
+function createLine(c,index){
 
 let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
 let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
@@ -308,34 +268,79 @@ let div=document.createElement("div");
 div.className="company";
 
 div.innerHTML=`
-<strong>${i+1}. ${c.name}</strong><br>
+<strong>${index+1}. ${c.name}</strong><br>
 Rendement : <span class="${y}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
-Frais entrée : <span class="${entry}">${c.entry}%</span><br>
+Frais versement : <span class="${entry}">${c.entry}%</span><br>
 Frais sortie : <span class="${exit}">${c.exit}%</span>
 `;
 
 document.getElementById("results").appendChild(div);
 
 setTimeout(()=>div.classList.add("show"),50);
+}
 
-},i*120);
+/* ===============================
+AFFICHER PLUS
+================================= */
+function showMore(){
 
+let next = visibleCount + 6;
+if(next > ranked.length) next = ranked.length;
+
+for(let i=visibleCount;i<next;i++){
+setTimeout(()=>createLine(ranked[i],i),(i-visibleCount)*100);
+}
+
+visibleCount = next;
+
+if(visibleCount < ranked.length){
+document.getElementById("btnMore").style.display="block";
+}else{
+document.getElementById("btnMore").style.display="none";
+}
+}
+
+/* ===============================
+CHART
+================================= */
+function renderChart(){
+
+if(chart) chart.destroy();
+
+chart = new Chart(document.getElementById("chart"),{
+type:"bar",
+data:{
+labels:ranked.slice(0,10).map(c=>c.name),
+datasets:[
+{
+label:"Rendement max",
+data:ranked.slice(0,10).map(c=>c.yieldMax)
+},
+{
+label:"Frais versement",
+data:ranked.slice(0,10).map(c=>c.entry)
+},
+{
+label:"Frais sortie",
+data:ranked.slice(0,10).map(c=>c.exit)
+}
+]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
 });
-
-setTimeout(()=>renderChart(ranked), ranked.length*120+300);
 }
 
-},100);
-
-}
-
-/* =========================
-   BUBBLES
-========================= */
+/* ===============================
+BUBBLES
+================================= */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
 let w,h;
+
 function resize(){
 w=window.innerWidth;
 h=window.innerHeight;
@@ -347,23 +352,32 @@ window.addEventListener("resize",resize);
 
 let bubbles=[];
 for(let i=0;i<80;i++){
-bubbles.push({x:Math.random()*w,y:Math.random()*h,r:3+Math.random()*4,vy:0.3+Math.random()});
+bubbles.push({
+x:Math.random()*w,
+y:Math.random()*h,
+r:3+Math.random()*4,
+vy:0.3+Math.random()
+});
 }
 
 function animate(){
 ctx.clearRect(0,0,w,h);
+
 for(let b of bubbles){
 b.y-=b.vy;
-if(b.y<0){b.y=h;b.x=Math.random()*w;}
+if(b.y<0){
+b.y=h;
+b.x=Math.random()*w;
+}
 ctx.beginPath();
 ctx.fillStyle="#60a5fa";
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 ctx.fill();
 }
+
 requestAnimationFrame(animate);
 }
 animate();
-
 </script>
 
 </body>
