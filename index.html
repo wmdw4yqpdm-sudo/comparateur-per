@@ -1,224 +1,90 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Plateforme PER</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-html,body{
-  margin:0;
-  padding:0;
-  font-family:Arial,sans-serif;
-  background:#f4f6f8;
-  overflow-x:hidden;
-}
-
-#bubbleCanvas{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  z-index:0;
-  pointer-events:none;
-}
-
-.container{
-  position:relative;
-  z-index:2;
-  max-width:950px;
-  margin:auto;
-  padding:20px;
-}
-
-header{
-  background:#031f94;
-  color:white;
-  padding:12px 25px;
-}
-
-.topbar{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  height:60px;
-}
-
-.logo{
-  height:42px;
-  background:white;
-  padding:4px;
-  border-radius:8px;
-}
-
-.title{font-size:20px;font-weight:bold;}
-.subtitle{font-size:12px;opacity:.85;}
-
-.card{
-  background:white;
-  padding:18px;
-  margin-bottom:20px;
-  border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,.08);
-}
-
-input,select{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border:1px solid #ccc;
-  border-radius:6px;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  background:#2563eb;
-  color:white;
-  border:none;
-  border-radius:6px;
-  font-size:16px;
-  cursor:pointer;
-  margin-top:8px;
-}
-
-button:hover{opacity:.95;}
-
-#btnMore{
-  display:none;
-  background:#0f766e;
-}
-
-.company{
-  padding:12px;
-  border-bottom:1px solid #eee;
-  opacity:0;
-  transform:translateY(10px);
-  transition:.4s;
-}
-
-.company.show{
-  opacity:1;
-  transform:translateY(0);
-}
-
-.best{color:#059669;font-weight:bold;}
-.medium{color:#d97706;font-weight:bold;}
-.low{color:#dc2626;font-weight:bold;}
-
-.chart-box{
-  height:320px;
-}
-
-canvas{
-  width:100%!important;
-  height:100%!important;
-}
-</style>
-</head>
-
-<body>
-
-<canvas id="bubbleCanvas"></canvas>
-
-<header>
-<div class="topbar">
-<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
-<div>
-<div class="title">Plateforme PER</div>
-<div class="subtitle">Accès conseiller privé</div>
-</div>
-</div>
-</header>
-
-<div class="container">
-
-<div class="card">
-<h2>Profil utilisateur</h2>
-
-<input placeholder="Nom et prénom">
-<select>
-<option>Kinésithérapeute</option>
-<option>Ostéopathe</option>
-<option>Médecin généraliste</option>
-<option>Chirurgien-dentiste</option>
-</select>
-
-<input type="number" placeholder="Âge">
-<input type="number" placeholder="Revenus annuels">
-<input type="number" placeholder="Versement mensuel">
-
-<button onclick="simulate()">Lancer l’analyse</button>
-</div>
-
-<div class="card">
-<h2>Sélection prioritaire</h2>
-
-<div id="results"></div>
-
-<button id="btnMore" onclick="showMore()">Afficher plus</button>
-</div>
-
-<div class="card">
-<h2>Projection retraite</h2>
-<div class="chart-box">
-<canvas id="chart"></canvas>
-</div>
-</div>
-
-</div>
-
+<!-- REMPLACE UNIQUEMENT TON SCRIPT PAR CELUI-CI -->
 <script>
+
+/* =========================
+   SHUFFLE
+========================= */
 function shuffle(array){
 for(let i=array.length-1;i>0;i--){
-let j=Math.floor(Math.random()*(i+1));
+const j=Math.floor(Math.random()*(i+1));
 [array[i],array[j]]=[array[j],array[i]];
 }
 return array;
 }
 
-/* ===============================
-32 COMPAGNIES
-================================= */
-const names = [
-"Generali","Groupama","MMA","April","AXA","SwissLife","Allianz","Aviva",
-"Malakoff","AG2R","CNP","MACSF","Apicil","Cardif","Suravenir","Spirica",
-"Matmut","Maaf","GMF","Gan","Abeille","SMABTP","Oradea","Primonial",
-"La Mondiale","Sogecap","BPCE Vie","Intencial","Neuflize","Monceau",
-"UAF Life","Patrimoine Vie"
+/* =========================
+   BASE 32 COMPAGNIES
+========================= */
+const companiesBase = [
+{name:"Generali",entry:0.95,exit:0,yieldMin:5.77,yieldMax:8.70},
+
+{name:"Groupama"},
+{name:"MMA"},
+{name:"April"},
+{name:"AXA"},
+{name:"SwissLife"},
+{name:"Allianz"},
+{name:"Aviva"},
+{name:"CNP"},
+{name:"AG2R"},
+{name:"Malakoff"},
+{name:"Gan"},
+{name:"MACSF"},
+{name:"Matmut"},
+{name:"GMF"},
+{name:"MAAF"},
+{name:"Suravenir"},
+{name:"Spirica"},
+{name:"Cardif"},
+{name:"Abeille"},
+{name:"Apicil"},
+{name:"Sogecap"},
+{name:"BPCE Vie"},
+{name:"Monceau"},
+{name:"La Mondiale"},
+{name:"Oradea"},
+{name:"Neuflize"},
+{name:"Primonial"},
+{name:"UAF Life"},
+{name:"Patrimoine Vie"},
+{name:"SMABTP"},
+{name:"Intencial"}
 ];
 
-let allCompanies = [];
 let ranked = [];
-let visibleCount = 0;
+let visible = 0;
 let chart;
 
-/* ===============================
-GENERATION COHERENTE
-================================= */
-function buildCompanies(){
+/* =========================
+   GENERATION COHERENTE
+========================= */
+function generateCompanies(){
 
-allCompanies = [];
+let arr = [];
 
-for(let i=0;i<32;i++){
+arr.push(companiesBase[0]); // Generali fixe
 
-let entry = +(0.80 + (i*0.13)).toFixed(2);
-let exit  = +(0.20 + (i*0.14)).toFixed(2);
+for(let i=1;i<companiesBase.length;i++){
 
+let level = i;
+
+/* frais augmentent progressivement */
+let entry = +(1.25 + level*0.11 + Math.random()*0.20).toFixed(2);
+let exit = +(0.55 + level*0.10 + Math.random()*0.20).toFixed(2);
+
+/* plafonds */
 if(entry>5) entry=5;
 if(exit>5) exit=5;
 
 /* rendement baisse progressivement */
-let maxYield = +(8.2 - (i*0.16)).toFixed(2);
-if(maxYield<2.4) maxYield=2.4;
+let maxYield = +(5.5 - level*0.08 - Math.random()*0.20).toFixed(2);
+if(maxYield<2.1) maxYield=2.1;
 
-let minYield = +(maxYield - (0.8 + Math.random()*1)).toFixed(2);
-if(minYield<1.5) minYield=1.5;
+let minYield = +(maxYield - (0.7 + Math.random()*0.8)).toFixed(2);
+if(minYield<1.2) minYield=1.2;
 
-allCompanies.push({
-name:names[i],
+arr.push({
+name:companiesBase[i].name,
 entry,
 exit,
 yieldMin:minYield,
@@ -226,83 +92,20 @@ yieldMax:maxYield
 });
 }
 
-/* Generali toujours forte */
-allCompanies[0] = {
-name:"Generali",
-entry:0.95,
-exit:0,
-yieldMin:5.77,
-yieldMax:8.70
-};
+return arr;
 }
 
+/* =========================
+   SCORE
+========================= */
 function score(c){
-let avg=(c.yieldMin+c.yieldMax)/2;
-return avg-(c.entry*0.55)-(c.exit*0.45);
+const avg = (c.yieldMin+c.yieldMax)/2;
+return avg - (c.entry*0.60) - (c.exit*0.40);
 }
 
-function simulate(){
-
-document.getElementById("results").innerHTML="";
-document.getElementById("btnMore").style.display="none";
-
-buildCompanies();
-
-ranked = shuffle(allCompanies)
-.map(c=>({...c,score:score(c)}))
-.sort((a,b)=>b.score-a.score);
-
-visibleCount = 0;
-
-showMore();
-renderChart();
-}
-
-function createLine(c,index){
-
-let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
-let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
-let y=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
-
-let div=document.createElement("div");
-div.className="company";
-
-div.innerHTML=`
-<strong>${index+1}. ${c.name}</strong><br>
-Rendement : <span class="${y}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
-Frais versement : <span class="${entry}">${c.entry}%</span><br>
-Frais sortie : <span class="${exit}">${c.exit}%</span>
-`;
-
-document.getElementById("results").appendChild(div);
-
-setTimeout(()=>div.classList.add("show"),50);
-}
-
-/* ===============================
-AFFICHER PLUS
-================================= */
-function showMore(){
-
-let next = visibleCount + 6;
-if(next > ranked.length) next = ranked.length;
-
-for(let i=visibleCount;i<next;i++){
-setTimeout(()=>createLine(ranked[i],i),(i-visibleCount)*100);
-}
-
-visibleCount = next;
-
-if(visibleCount < ranked.length){
-document.getElementById("btnMore").style.display="block";
-}else{
-document.getElementById("btnMore").style.display="none";
-}
-}
-
-/* ===============================
-CHART
-================================= */
+/* =========================
+   CHART
+========================= */
 function renderChart(){
 
 if(chart) chart.destroy();
@@ -314,15 +117,18 @@ labels:ranked.slice(0,10).map(c=>c.name),
 datasets:[
 {
 label:"Rendement max",
-data:ranked.slice(0,10).map(c=>c.yieldMax)
+data:ranked.slice(0,10).map(c=>c.yieldMax),
+backgroundColor:"#22c55e"
 },
 {
-label:"Frais versement",
-data:ranked.slice(0,10).map(c=>c.entry)
+label:"Frais entrée",
+data:ranked.slice(0,10).map(c=>c.entry),
+backgroundColor:"#ef4444"
 },
 {
 label:"Frais sortie",
-data:ranked.slice(0,10).map(c=>c.exit)
+data:ranked.slice(0,10).map(c=>c.exit),
+backgroundColor:"#f97316"
 }
 ]
 },
@@ -333,9 +139,125 @@ maintainAspectRatio:false
 });
 }
 
-/* ===============================
-BUBBLES
-================================= */
+/* =========================
+   AFFICHER LIGNE
+========================= */
+function addCompany(c,i){
+
+let entry =
+c.entry<=1.5 ? "best" :
+c.entry<=3 ? "medium" : "low";
+
+let exit =
+c.exit<=1.2 ? "best" :
+c.exit<=3 ? "medium" : "low";
+
+let y =
+c.yieldMax>=5.2 ? "best" :
+c.yieldMax>=3.6 ? "medium" : "low";
+
+let div=document.createElement("div");
+div.className="company";
+
+div.innerHTML=`
+<strong>${i+1}. ${c.name}</strong><br>
+Rendement : <span class="${y}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
+Frais entrée : <span class="${entry}">${c.entry}%</span><br>
+Frais sortie : <span class="${exit}">${c.exit}%</span>
+`;
+
+document.getElementById("results").appendChild(div);
+
+setTimeout(()=>div.classList.add("show"),50);
+}
+
+/* =========================
+   BOUTON PLUS
+========================= */
+function showMore(){
+
+let max = visible + 6;
+if(max > ranked.length) max = ranked.length;
+
+for(let i=visible;i<max;i++){
+setTimeout(()=>addCompany(ranked[i],i),(i-visible)*100);
+}
+
+visible = max;
+
+if(visible >= ranked.length){
+document.getElementById("moreBtn").style.display="none";
+}else{
+document.getElementById("moreBtn").style.display="block";
+}
+}
+
+/* =========================
+   SIMULATION
+========================= */
+function simulate(){
+
+document.getElementById("results").innerHTML="";
+document.getElementById("loaderContainer").style.display="block";
+document.getElementById("moreBtn").style.display="none";
+
+visible = 0;
+
+let progress=0;
+let stepIndex=0;
+
+const steps=[
+"Accès sécurisé au comparateur privé...",
+"Vérification des accès partenaires agréés...",
+"Chargement des grilles exclusives assureurs...",
+"Simulation des conditions de marché...",
+"Analyse des frais réels négociés...",
+"Croisement des données partenaires...",
+"Finalisation de votre sélection..."
+];
+
+let loaderText=document.getElementById("loaderText");
+
+let interval=setInterval(()=>{
+
+progress += (100/85);
+document.getElementById("loaderBar").style.width=progress+"%";
+
+let newStep=Math.floor((progress/100)*steps.length);
+
+if(newStep!==stepIndex && newStep<steps.length){
+stepIndex=newStep;
+loaderText.innerText=steps[stepIndex];
+}
+
+if(progress>=100){
+
+clearInterval(interval);
+document.getElementById("loaderContainer").style.display="none";
+
+/* génération */
+let companies = generateCompanies();
+
+/* Generali premier garanti */
+let generali = companies.shift();
+
+let others = shuffle(companies).map(c=>({...c,score:score(c)}))
+.sort((a,b)=>b.score-a.score);
+
+ranked = [generali,...others];
+
+showMore();
+
+setTimeout(()=>renderChart(),800);
+
+}
+
+},100);
+}
+
+/* =========================
+   BUBBLES
+========================= */
 const canvas=document.getElementById("bubbleCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -351,6 +273,7 @@ resize();
 window.addEventListener("resize",resize);
 
 let bubbles=[];
+
 for(let i=0;i<80;i++){
 bubbles.push({
 x:Math.random()*w,
@@ -361,14 +284,18 @@ vy:0.3+Math.random()
 }
 
 function animate(){
+
 ctx.clearRect(0,0,w,h);
 
 for(let b of bubbles){
+
 b.y-=b.vy;
+
 if(b.y<0){
 b.y=h;
 b.x=Math.random()*w;
 }
+
 ctx.beginPath();
 ctx.fillStyle="#60a5fa";
 ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
@@ -377,8 +304,12 @@ ctx.fill();
 
 requestAnimationFrame(animate);
 }
+
 animate();
+
 </script>
 
-</body>
-</html>
+<!-- AJOUTE CE BOUTON SOUS #results -->
+<button id="moreBtn" onclick="showMore()" style="display:none;margin-top:15px;">
+Afficher plus
+</button>
