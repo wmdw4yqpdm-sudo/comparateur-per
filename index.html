@@ -1,95 +1,60 @@
 <script>
 
 /* =========================
-   SHUFFLE
+   DATA 32 COMPAGNIES
 ========================= */
-function shuffle(array){
-for(let i=array.length-1;i>0;i--){
-const j=Math.floor(Math.random()*(i+1));
-[array[i],array[j]]=[array[j],array[i]];
-}
-return array;
-}
-
-/* =========================
-   BASE 32 COMPAGNIES
-========================= */
-const companiesBase=[
-{name:"Generali"},
-{name:"Groupama"},
-{name:"MMA"},
-{name:"April"},
-{name:"AXA"},
-{name:"SwissLife"},
-{name:"Allianz"},
-{name:"Aviva"},
-{name:"CNP"},
-{name:"AG2R"},
-{name:"Malakoff"},
-{name:"Gan"},
-{name:"MACSF"},
-{name:"Matmut"},
-{name:"GMF"},
-{name:"MAAF"},
-{name:"Suravenir"},
-{name:"Spirica"},
-{name:"Cardif"},
-{name:"Abeille"},
-{name:"Apicil"},
-{name:"Sogecap"},
-{name:"BPCE Vie"},
-{name:"Monceau"},
-{name:"La Mondiale"},
-{name:"Oradea"},
-{name:"Neuflize"},
-{name:"Primonial"},
-{name:"UAF Life"},
-{name:"Patrimoine Vie"},
-{name:"SMABTP"},
-{name:"Intencial"}
+const names = [
+"Generali","Groupama","MMA","April","AXA","SwissLife","Allianz","Aviva",
+"CNP","AG2R","Malakoff","Gan","MACSF","Matmut","GMF","MAAF",
+"Suravenir","Spirica","Cardif","Abeille","Apicil","Sogecap",
+"BPCE Vie","Monceau","La Mondiale","Oradea","Neuflize","Primonial",
+"UAF Life","Patrimoine Vie","SMABTP","Intencial"
 ];
 
+let companies=[];
 let ranked=[];
-let visible=0;
+let visibleCount=0;
+let chartInstance=null;
 
 /* =========================
    GENERATION COHERENTE
 ========================= */
-function generate(){
+function buildCompanies(){
 
 let arr=[];
 
-/* Generali toujours top */
-arr.push({
-name:"Generali",
-entry:0.95,
-exit:0,
-yieldMin:5.8,
-yieldMax:8.7
-});
+for(let i=0;i<names.length;i++){
 
-for(let i=1;i<companiesBase.length;i++){
-
-let entry = +(1.2 + i*0.12 + Math.random()*0.3).toFixed(2);
-let exit  = +(0.6 + i*0.10 + Math.random()*0.25).toFixed(2);
+let entry = +(1 + i*0.12 + Math.random()*0.4).toFixed(2);
+let exit  = +(0.4 + i*0.1 + Math.random()*0.3).toFixed(2);
 
 if(entry>5) entry=5;
 if(exit>5) exit=5;
 
-let maxYield = +(5.5 - i*0.09 - Math.random()*0.3).toFixed(2);
+/* rendement réaliste */
+let maxYield = +(6.2 - i*0.09 - Math.random()*0.25).toFixed(2);
 if(maxYield<2.2) maxYield=2.2;
 
-let minYield = +(maxYield - (0.6 + Math.random()*0.8)).toFixed(2);
-if(minYield<1.2) minYield=1.2;
+let minYield = +(maxYield - (0.6 + Math.random()*0.7)).toFixed(2);
+if(minYield<1.3) minYield=1.3;
 
 arr.push({
-name:companiesBase[i].name,
+name:names[i],
 entry,
 exit,
 yieldMin:minYield,
 yieldMax:maxYield
 });
 }
+
+/* Generali toujours top */
+arr[0] = {
+name:"Generali",
+entry:0.95,
+exit:0,
+yieldMin:5.77,
+yieldMax:8.70
+};
 
 return arr;
 }
@@ -103,13 +68,13 @@ return avg - (c.entry*0.6) - (c.exit*0.4);
 }
 
 /* =========================
-   AFFICHAGE ITEM
+   AFFICHAGE UNE COMPAGNIE
 ========================= */
-function renderItem(c,i){
+function renderCompany(c,i){
 
-let entryClass=c.entry<1.5?"best":c.entry<3?"medium":"low";
-let exitClass=c.exit<1.5?"best":c.exit<3?"medium":"low";
-let yClass=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
+let entryClass = c.entry<1.5?"best":c.entry<3?"medium":"low";
+let exitClass  = c.exit<1.5?"best":c.exit<3?"medium":"low";
+let yClass     = c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
 
 let div=document.createElement("div");
 div.className="company";
@@ -122,26 +87,24 @@ Frais sortie : <span class="${exitClass}">${c.exit}%</span>
 `;
 
 document.getElementById("results").appendChild(div);
-
 setTimeout(()=>div.classList.add("show"),50);
 }
 
 /* =========================
-   AFFICHER PLUS
+   AFFICHER PLUS (progressif)
 ========================= */
 function showMore(){
 
-let next=visible+6;
-if(next>ranked.length) next=ranked.length;
+let next = visibleCount + 6;
+if(next > ranked.length) next = ranked.length;
 
-for(let i=visible;i<next;i++){
-setTimeout(()=>renderItem(ranked[i],i),(i-visible)*120);
+for(let i=visibleCount;i<next;i++){
+setTimeout(()=>renderCompany(ranked[i],i),(i-visibleCount)*120);
 }
 
-visible=next;
+visibleCount = next;
 
-/* bouton caché quand fini */
-if(visible>=ranked.length){
+if(visibleCount >= ranked.length){
 document.getElementById("btnMore").style.display="none";
 }else{
 document.getElementById("btnMore").style.display="block";
@@ -149,16 +112,53 @@ document.getElementById("btnMore").style.display="block";
 }
 
 /* =========================
-   SIMULATION (TON LOADER RESTE IDENTIQUE)
+   CHART (SAFE)
+========================= */
+function renderChart(){
+
+if(chartInstance) chartInstance.destroy();
+
+chartInstance = new Chart(document.getElementById("chart"),{
+type:"bar",
+data:{
+labels:ranked.slice(0,10).map(c=>c.name),
+datasets:[
+{
+label:"Rendement max",
+data:ranked.slice(0,10).map(c=>c.yieldMax),
+backgroundColor:"#22c55e"
+},
+{
+label:"Frais entrée",
+data:ranked.slice(0,10).map(c=>c.entry),
+backgroundColor:"#ef4444"
+},
+{
+label:"Frais sortie",
+data:ranked.slice(0,10).map(c=>c.exit),
+backgroundColor:"#f97316"
+}
+]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
+});
+}
+
+/* =========================
+   SIMULATION (NE TOUCHE PAS TON LOADER HTML)
 ========================= */
 function simulate(){
 
 document.getElementById("results").innerHTML="";
-document.getElementById("loaderContainer").style.display="block";
 document.getElementById("btnMore").style.display="none";
+document.getElementById("loaderContainer").style.display="block";
 
-visible=0;
+visibleCount=0;
 
+/* loader animation identique */
 let progress=0;
 let step=0;
 
@@ -190,56 +190,21 @@ if(progress>=100){
 clearInterval(interval);
 document.getElementById("loaderContainer").style.display="none";
 
-ranked = generate()
+/* build */
+companies = buildCompanies();
+
+ranked = companies
 .map(c=>({...c,score:score(c)}))
 .sort((a,b)=>b.score-a.score);
 
-/* affiche 1ère vague */
+/* affichage initial */
 showMore();
+
+/* chart */
+setTimeout(renderChart,500);
 }
 
 },30);
 }
-
-/* =========================
-   BUBBLES (inchangé)
-========================= */
-const canvas=document.getElementById("bubbleCanvas");
-const ctx=canvas.getContext("2d");
-
-let w,h;
-
-function resize(){
-w=window.innerWidth;
-h=window.innerHeight;
-canvas.width=w;
-canvas.height=h;
-}
-resize();
-window.addEventListener("resize",resize);
-
-let bubbles=[];
-for(let i=0;i<80;i++){
-bubbles.push({
-x:Math.random()*w,
-y:Math.random()*h,
-r:3+Math.random()*4,
-vy:0.3+Math.random()
-});
-}
-
-function animate(){
-ctx.clearRect(0,0,w,h);
-for(let b of bubbles){
-b.y-=b.vy;
-if(b.y<0){b.y=h;b.x=Math.random()*w;}
-ctx.beginPath();
-ctx.fillStyle="#60a5fa";
-ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-ctx.fill();
-}
-requestAnimationFrame(animate);
-}
-animate();
 
 </script>
