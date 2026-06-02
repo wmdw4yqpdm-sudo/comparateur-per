@@ -1,444 +1,1129 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Plateforme PER</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparateur PER — Generali TNS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  font-family:Arial, sans-serif;
-  background:#f4f6f8;
-  overflow-x:hidden;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f5f7;
+  --panel:#ffffff;
+  --surface:#ffffff;
+  --surface2:#f0f1f4;
+  --surface3:#e4e6eb;
+  --border:rgba(0,0,0,0.08);
+  --border2:rgba(0,0,0,0.14);
+  --text:#1a1a2e;--text2:#5a5c6e;--text3:#9a9cae;
+  --gen:#b8860b;--gen-l:rgba(184,134,11,0.08);--gen-g:rgba(184,134,11,0.18);--gen-d:#8a6308;
+  --oth:#2563b0;--oth-l:rgba(37,99,176,0.07);
+  --red:#c0392b;--green:#1a7a4a;--orange:#c0622b;
+  --r:12px;--rs:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.06);
 }
 
-#bubbleCanvas{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  z-index:0;
-  pointer-events:none;
-}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;overflow-x:hidden}
 
-.container{
-  position:relative;
-  z-index:2;
-  max-width:950px;
-  margin:auto;
-  padding:20px;
-}
-
-header{
-  background:#031f94;
-  color:white;
-  padding:12px 25px;
-}
-
+/* ════════════════════════════════
+   TOP BAR — always visible
+════════════════════════════════ */
 .topbar{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  height:60px;
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,0.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0;
+  height:56px;
+}
+.tb-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:0 20px;border-right:1px solid var(--border);
+  height:100%;flex-shrink:0;
+}
+.tb-badge{width:30px;height:30px;background:var(--gen);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Instrument Serif',serif;font-size:.9rem;color:#fff;font-weight:700}
+.tb-name{font-size:.8rem;font-weight:600;color:var(--text)}
+.tb-sub{font-size:.62rem;color:var(--text3)}
+
+/* Contract picker in topbar */
+.tb-picker{
+  display:flex;align-items:center;gap:10px;
+  padding:0 20px;border-right:1px solid var(--border);
+  height:100%;flex:0 0 auto;
+}
+.tb-picker-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);white-space:nowrap}
+.tb-select-wrap{position:relative}
+.tb-select{
+  appearance:none;-webkit-appearance:none;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rs);
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;
+  padding:6px 28px 6px 10px;cursor:pointer;outline:none;
+  transition:border-color .2s;min-width:220px;
+}
+.tb-select:focus{border-color:var(--oth)}
+.tb-arrow{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:.7rem;pointer-events:none}
+.tb-contract-badge{
+  background:var(--gen-l);border:1px solid var(--gen);
+  border-radius:6px;padding:4px 10px;
+  font-size:.7rem;font-weight:600;color:var(--gen);white-space:nowrap;
 }
 
-.logo{
-  height:42px;
-  background:white;
-  padding:4px;
-  border-radius:8px;
-  object-fit:contain;
+/* Tabs in topbar */
+.tb-tabs{display:flex;align-items:center;gap:2px;padding:0 12px;height:100%;flex:1}
+.tb-tab{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;height:38px;border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;
+  color:var(--text3);cursor:pointer;border:none;background:none;
+  transition:all .15s;white-space:nowrap;
 }
-
-.title{font-size:20px;font-weight:bold;}
-.subtitle{font-size:12px;opacity:0.85;}
-
-.card{
-  background:white;
-  padding:18px;
-  margin-bottom:20px;
-  border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+.tb-tab:hover{color:var(--text);background:var(--surface2)}
+.tb-tab.active{color:var(--text);background:var(--surface2);font-weight:600}
+.tb-tab .tab-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.tb-tab.active .tab-dot{background:var(--gen)}
+.tb-tab .tab-num{
+  font-family:'DM Mono',monospace;font-size:.65rem;
+  background:var(--surface3);border-radius:4px;
+  padding:1px 5px;color:var(--text3);
 }
+.tb-tab.active .tab-num{background:var(--gen-l);color:var(--gen)}
 
-input,select{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border:1px solid #ccc;
-  border-radius:6px;
+/* Generali badge topbar */
+.tb-gen-pill{
+  margin-left:auto;margin-right:16px;flex-shrink:0;
+  background:var(--gen-l);border:1px solid var(--gen);
+  border-radius:6px;padding:5px 12px;
+  display:flex;flex-direction:column;align-items:flex-end;
 }
+.tb-gen-pill .gp-l{font-size:.56rem;text-transform:uppercase;letter-spacing:.09em;color:var(--gen);font-weight:700}
+.tb-gen-pill .gp-v{font-size:.75rem;font-weight:600;color:var(--text)}
 
-button{
-  width:100%;
-  padding:12px;
-  background:#2563eb;
-  color:white;
-  border:none;
-  border-radius:6px;
-  font-size:16px;
-  cursor:pointer;
+/* ════════════════════════════════
+   BODY LAYOUT
+════════════════════════════════ */
+.body-wrap{display:flex;min-height:calc(100vh - 56px)}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:260px;min-width:260px;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:12px;
+  padding:16px 12px;
+  position:sticky;top:56px;height:calc(100vh - 56px);
+  overflow-y:auto;
 }
-
-#loaderContainer{display:none;margin-top:15px;}
-#moreBtn{display:none;margin-top:15px;background:#0f766e;}
-
-.loader-bg{
-  height:14px;
-  background:#e5e7eb;
-  border-radius:30px;
-  overflow:hidden;
+.sl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--text3)}
+.sw{position:relative}
+.sw input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:.78rem;
+  padding:7px 9px 7px 27px;outline:none;transition:border-color .2s;
 }
+.sw input:focus{border-color:var(--gen)}.sw input::placeholder{color:var(--text3)}
+.si{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:.75rem;pointer-events:none}
+.ftabs{display:flex;gap:4px;flex-wrap:wrap}
+.ftab{padding:3px 9px;border-radius:20px;border:1px solid var(--border2);background:none;
+  font-family:'DM Sans',sans-serif;font-size:.67rem;color:var(--text2);cursor:pointer;transition:all .15s}
+.ftab:hover{border-color:var(--gen);color:var(--gen)}
+.ftab.active{background:var(--gen);border-color:var(--gen);color:#fff;font-weight:600}
+.clist{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.ci{padding:8px 9px;border-radius:var(--rs);border:1px solid transparent;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:7px}
+.ci:hover{background:var(--surface2);border-color:var(--border)}
+.ci.selected{background:var(--gen-l);border-color:var(--gen)}
+.ci-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--text3)}
+.ci.selected .ci-dot{background:var(--gen)}
+.ci-name{font-size:.74rem;font-weight:500;color:var(--text2);line-height:1.3;flex:1}
+.ci.selected .ci-name{color:var(--text)}
+.ci-co{font-size:.6rem;color:var(--text3)}
+.ci-tag{font-size:.57rem;font-family:'DM Mono',monospace;padding:2px 5px;
+  border-radius:4px;background:var(--surface3);color:var(--text3);flex-shrink:0}
+.ci.selected .ci-tag{background:var(--gen-d);color:var(--gen)}
 
-#loaderBar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e);
+/* ── MAIN AREA ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+
+/* Tab panels */
+.tab-panel{display:none;flex-direction:column;gap:18px;padding:22px 26px}
+.tab-panel.active{display:flex}
+
+/* Empty state */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:400px;gap:14px;text-align:center;
 }
-
-.loader-text{
-  text-align:center;
-  font-size:13px;
-  margin-top:8px;
+.es-ring{
+  width:64px;height:64px;border-radius:50%;
+  border:2px dashed var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;opacity:.3;
 }
+.empty-state h3{font-size:.95rem;font-weight:500;color:var(--text2)}
+.empty-state p{font-size:.78rem;color:var(--text3);max-width:300px}
 
-.company{
-  padding:12px;
-  border-bottom:1px solid #eee;
-  opacity:0;
-  transform:translateY(10px);
-  transition:0.4s;
+/* ════════════════════════════════
+   CARDS & COMMON
+════════════════════════════════ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shadow)}
+.card-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:14px}
+.card-title span{color:var(--gen)}
+
+/* Two-col layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.four-col{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* Section divider */
+.sdiv{border-top:1px solid var(--border);padding-top:16px;margin-top:4px}
+.sdiv-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:12px}
+
+/* ════════════════════════════════
+   SLIDERS
+════════════════════════════════ */
+.pgroup{display:flex;flex-direction:column;gap:6px}
+.pgroup > label{font-size:.68rem;color:var(--text2);font-weight:500}
+.srow{display:flex;align-items:center;gap:8px}
+.srow input[type=range]{
+  flex:1;-webkit-appearance:none;
+  height:4px;background:var(--surface3);border-radius:3px;outline:none;cursor:pointer;
 }
-
-.company.show{
-  opacity:1;
-  transform:translateY(0);
+.srow input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  cursor:pointer;transition:transform .15s,box-shadow .15s;
 }
+.srow input[type=range].g-sl::-webkit-slider-thumb{background:var(--gen);box-shadow:0 0 0 0 var(--gen-g)}
+.srow input[type=range].g-sl::-webkit-slider-thumb:hover{transform:scale(1.2);box-shadow:0 0 0 6px var(--gen-g)}
+.srow input[type=range].o-sl::-webkit-slider-thumb{background:var(--oth)}
+.srow input[type=range].o-sl::-webkit-slider-thumb:hover{transform:scale(1.15)}
+.srow input[type=range].n-sl::-webkit-slider-thumb{background:var(--text2)}
 
-.best{color:#059669;font-weight:bold;}
-.medium{color:#d97706;font-weight:bold;}
-.low{color:#dc2626;font-weight:bold;}
-
-.chart-box{
-  height:320px;
+.sv{
+  font-family:'DM Mono',monospace;font-size:.74rem;font-weight:500;
+  background:var(--surface2);border:1px solid var(--border);
+  padding:3px 8px;border-radius:6px;min-width:58px;text-align:center;white-space:nowrap;
 }
+.sv.g{color:var(--gen)}.sv.b{color:var(--oth)}.sv.n{color:var(--text2)}
 
-canvas{
-  width:100% !important;
-  height:100% !important;
+/* Scenario pills */
+.sc-row{display:flex;gap:6px;flex-wrap:wrap}
+.sc-btn{
+  padding:5px 13px;border-radius:20px;border:1px solid var(--border2);background:none;
+  color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:500;
+  cursor:pointer;transition:all .15s;
+}
+.sc-btn:hover{border-color:var(--text2);color:var(--text)}
+.sc-btn.active{background:var(--gen);border-color:var(--gen);color:#fff;font-weight:600}
+
+/* Fee col header */
+.fee-col-head{display:flex;align-items:center;gap:7px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.fc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fc-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+
+/* ════════════════════════════════
+   COMPARE CARDS (tab 2)
+════════════════════════════════ */
+.cmp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.cmp-card.gen{border-color:var(--gen);background:var(--gen-l)}
+.cmp-card.oth{border-color:var(--oth);background:var(--oth-l)}
+.cmp-brand{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.cb-dot{width:8px;height:8px;border-radius:50%}
+.cb-name{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em}
+.cmp-title{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:12px}
+.fee-boxes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.fbox{background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:7px;padding:8px 9px;text-align:center}
+.fbox-lbl{font-size:.54rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;line-height:1.3}
+.fbox-val{font-family:'DM Mono',monospace;font-size:.84rem;font-weight:500}
+.fbox-val.g{color:var(--gen)}.fbox-val.ok{color:var(--green)}.fbox-val.bad{color:var(--red)}.fbox-val.warn{color:var(--orange)}.fbox-val.b{color:var(--oth)}
+.perf-section{border-top:1px solid var(--border);padding-top:10px}
+.perf-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:6px}
+.perf-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.py{text-align:center}
+.py-y{font-size:.5rem;color:var(--text3);margin-bottom:2px}
+.py-v{font-family:'DM Mono',monospace;font-size:.7rem;font-weight:500}
+.py-v.g{color:var(--gen)}.py-v.b{color:var(--oth)}.py-v.na{color:var(--text3)}
+.avg-pill{display:inline-flex;align-items:center;gap:5px;background:var(--surface3);border-radius:5px;padding:3px 8px;font-size:.68rem;margin-top:6px}
+.avg-pill .av{font-family:'DM Mono',monospace;font-weight:600}
+
+/* ════════════════════════════════
+   KPI CARDS
+════════════════════════════════ */
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.kpi.win{border-color:var(--gen);background:var(--gen-l)}
+.kpi.lose{border-color:rgba(204,85,85,.3);background:rgba(204,85,85,.06)}
+.kpi.info{border-color:rgba(88,137,200,.22)}
+.kpi-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:7px;font-weight:600}
+.kpi-val{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500}
+.kpi-val.g{color:var(--gen)}.kpi-val.b{color:var(--oth)}.kpi-val.gn{color:var(--green)}.kpi-val.rd{color:var(--red)}.kpi-val.og{color:var(--orange)}
+.kpi-sub{font-size:.62rem;color:var(--text3);margin-top:4px}
+
+/* ════════════════════════════════
+   ALERT BANNER
+════════════════════════════════ */
+.alert-banner{
+  background:rgba(204,125,58,.08);border:1px solid rgba(204,125,58,.35);
+  border-radius:var(--rs);padding:12px 16px;font-size:.73rem;color:var(--text2);line-height:1.6;
+}
+.alert-banner strong{color:var(--orange)}
+.alert-banner.green{background:rgba(71,168,112,.07);border-color:rgba(71,168,112,.3)}
+.alert-banner.green strong{color:var(--green)}
+
+/* ════════════════════════════════
+   SUMMARY BANNER
+════════════════════════════════ */
+.summary{
+  display:flex;align-items:center;gap:16px;
+  padding:16px 20px;border-radius:var(--r);border:1px solid var(--border);
+  background:var(--surface);box-shadow:var(--shadow);
+}
+.summary.pos{border-color:rgba(204,85,85,.4);background:rgba(204,85,85,.05)}
+.summary.neg{border-color:rgba(71,168,112,.3);background:rgba(71,168,112,.05)}
+.s-icon{font-size:1.6rem;flex-shrink:0}
+.s-text h3{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:3px}
+.s-text p{font-size:.74rem;color:var(--text2);line-height:1.5}
+.s-val{margin-left:auto;text-align:right;flex-shrink:0}
+.s-big{font-family:'DM Mono',monospace;font-size:1.35rem;font-weight:600}
+.s-lbl{font-size:.62rem;color:var(--text3)}
+
+/* ════════════════════════════════
+   CHART
+════════════════════════════════ */
+.chart-wrap{position:relative;height:270px}
+
+/* ════════════════════════════════
+   TABLE
+════════════════════════════════ */
+.t-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.t-card table{width:100%;border-collapse:collapse;font-size:.78rem}
+.t-card th{background:var(--surface2);padding:9px 14px;font-size:.6rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.09em;color:var(--text3);text-align:left;border-bottom:1px solid var(--border)}
+.t-card td{padding:11px 14px;border-bottom:1px solid var(--border)}
+.t-card tr:last-child td{border-bottom:none}
+.t-card tr:hover td{background:var(--surface2);transition:background .1s}
+.t-y{font-family:'DM Mono',monospace;font-weight:600;color:var(--text2);font-size:.72rem}
+.t-g{font-family:'DM Mono',monospace;font-weight:500;color:var(--gen)}
+.t-o{font-family:'DM Mono',monospace;font-weight:500;color:var(--oth)}
+.t-p{font-family:'DM Mono',monospace;font-weight:600;color:var(--green)}
+.t-n{font-family:'DM Mono',monospace;font-weight:600;color:var(--red)}
+
+/* ════════════════════════════════
+   RECAP TABLE
+════════════════════════════════ */
+.recap-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.recap-table-wrap table{width:100%;border-collapse:collapse;font-size:.8rem}
+.recap-table-wrap thead tr{background:var(--surface2)}
+.recap-table-wrap th{
+  padding:11px 16px;font-size:.62rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--text3);text-align:left;border-bottom:1px solid var(--border);
+}
+.recap-table-wrap th.th-gen{color:var(--gen);background:rgba(200,164,74,.07)}
+.recap-table-wrap th.th-oth{color:var(--oth);background:rgba(88,137,200,.07)}
+.recap-table-wrap th.th-diff{color:var(--green);background:rgba(71,168,112,.06)}
+.recap-table-wrap td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.recap-table-wrap tr:last-child td{border-bottom:none}
+.recap-table-wrap tr:hover td{background:var(--surface2);transition:background .1s}
+.recap-table-wrap tr.total-row td{background:var(--surface2);font-weight:700}
+.recap-table-wrap tr.total-row td:first-child{color:var(--text);font-size:.82rem}
+.recap-table-wrap tr.sep-row td{background:var(--bg);padding:4px 16px;font-size:.6rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
+.rt-label{font-size:.8rem;color:var(--text);font-weight:500}
+.rt-sub{font-size:.65rem;color:var(--text3);margin-top:2px}
+.rt-gen{font-family:'DM Mono',monospace;font-weight:500;color:var(--gen)}
+.rt-oth{font-family:'DM Mono',monospace;font-weight:500;color:var(--oth)}
+.rt-diff-pos{font-family:'DM Mono',monospace;font-weight:700;color:var(--green)}
+.rt-diff-neg{font-family:'DM Mono',monospace;font-weight:700;color:var(--red)}
+.rt-zero{font-family:'DM Mono',monospace;color:var(--text3)}
+.recap-hero{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+}
+.rhero{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;
+}
+.rhero.total-gen{border-color:var(--gen);background:var(--gen-l)}
+.rhero.total-oth{border-color:rgba(204,85,85,.35);background:rgba(204,85,85,.06)}
+.rhero.total-diff{border-color:rgba(71,168,112,.35);background:rgba(71,168,112,.06)}
+.rhero-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
+.rhero-val{font-family:'DM Mono',monospace;font-size:1.5rem;font-weight:600;margin-top:2px}
+.rhero-val.g{color:var(--gen)}.rhero-val.rd{color:var(--red)}.rhero-val.gn{color:var(--green)}
+.rhero-sub{font-size:.68rem;color:var(--text2)}
+.recap-note{font-size:.65rem;color:var(--text3);line-height:1.65;
+  padding:9px 14px;background:var(--surface2);border-radius:var(--rs);border-left:3px solid var(--border2)}
+.note-bar{font-size:.65rem;color:var(--text3);line-height:1.65;
+  padding:9px 14px;background:var(--surface2);border-radius:var(--rs);border-left:3px solid var(--border2)}
+
+/* ════════════════════════════════
+   RESPONSIVE
+════════════════════════════════ */
+@media(max-width:960px){
+  .sidebar{width:220px;min-width:220px}
+  .three-col,.four-col{grid-template-columns:1fr 1fr}
+  .two-col{grid-template-columns:1fr}
+  .fee-boxes{grid-template-columns:repeat(2,1fr)}
+  .tb-picker{display:none}
+}
+@media(max-width:680px){
+  .body-wrap{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:static;max-height:260px}
+  .tab-panel{padding:14px 12px}
+  .three-col,.four-col,.two-col{grid-template-columns:1fr}
+  .perf-row{grid-template-columns:repeat(4,1fr)}
+  .tb-tabs{gap:0;padding:0 6px}
+  .tb-tab{padding:0 9px;font-size:.7rem}
+  .summary{flex-wrap:wrap}
 }
 </style>
 </head>
-
 <body>
 
-<canvas id="bubbleCanvas"></canvas>
+<!-- ════════ TOP BAR ════════ -->
+<header class="topbar">
+  <div class="tb-logo">
+    <div class="tb-badge">G</div>
+    <div><div class="tb-name">Comparateur PER</div><div class="tb-sub">Outil conseiller</div></div>
+  </div>
 
-<header>
-<div class="topbar">
-<img class="logo" src="https://jobs-stages.letudiant.fr/_next/image?url=https%3A%2F%2Fpiloty-public.s3.eu-west-3.amazonaws.com%2FcompaniesDocuments%2Falyor%2Falyor_logo_1771848316587&w=384&q=80">
-<div>
-<div class="title">Plateforme PER</div>
-<div class="subtitle">Accès conseiller privé</div>
-</div>
-</div>
+  <div class="tb-picker">
+    <span class="tb-picker-label">Contrat client</span>
+    <div class="tb-select-wrap">
+      <select class="tb-select" id="topbar-select" onchange="selectFromTopbar(this.value)">
+        <option value="">— Choisir un contrat —</option>
+      </select>
+      <span class="tb-arrow">▾</span>
+    </div>
+  </div>
+
+  <nav class="tb-tabs">
+    <button class="tb-tab active" onclick="switchTab(this,'tab-params')">
+      <div class="tab-dot"></div>Paramètres &amp; Frais
+    </button>
+    <button class="tb-tab" onclick="switchTab(this,'tab-compare')" id="tab-compare-btn">
+      <div class="tab-dot"></div>Comparatif
+      <span class="tab-num" id="tab-diff-badge">—</span>
+    </button>
+    <button class="tb-tab" onclick="switchTab(this,'tab-rente')">
+      <div class="tab-dot"></div>Sortie Rente
+    </button>
+    <button class="tb-tab" onclick="switchTab(this,'tab-projection')">
+      <div class="tab-dot"></div>Projection
+    </button>
+    <button class="tb-tab" onclick="switchTab(this,'tab-recap')">
+      <div class="tab-dot"></div>Récapitulatif frais
+    </button>
+  </nav>
+
+  <div class="tb-gen-pill">
+    <div class="gp-l">Generali TNS</div>
+    <div class="gp-v">La Retraite</div>
+  </div>
 </header>
 
-<div class="container">
+<!-- ════════ BODY ════════ -->
+<div class="body-wrap">
 
-<div class="card">
-<h2>Profil utilisateur</h2>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="sl" style="margin-bottom:8px">Rechercher</div>
+      <div class="sw"><span class="si">🔍</span>
+        <input type="text" id="sinput" placeholder="Nom, assureur…" oninput="renderList()">
+      </div>
+    </div>
+    <div>
+      <div class="sl" style="margin-bottom:7px">Catégorie</div>
+      <div class="ftabs">
+        <button class="ftab active" onclick="setFilter(this,'all')">Tous</button>
+        <button class="ftab" onclick="setFilter(this,'reseau')">Réseau</button>
+        <button class="ftab" onclick="setFilter(this,'mutuelle')">Mutuelles</button>
+        <button class="ftab" onclick="setFilter(this,'banque')">Banques</button>
+        <button class="ftab" onclick="setFilter(this,'online')">Internet</button>
+      </div>
+    </div>
+    <div class="sl">Contrat du client ↓</div>
+    <div class="clist" id="clist"></div>
+  </aside>
 
-<input id="fullname" placeholder="Nom et prénom">
+  <!-- MAIN -->
+  <main class="main">
 
-<select id="profession">
-<option>Kinésithérapeute</option>
-<option>Ostéopathe</option>
-<option>Médecin généraliste</option>
-<option>Chirurgien-dentiste</option>
-</select>
+    <!-- ══ EMPTY STATE ══ -->
+    <div class="empty-state" id="empty-state">
+      <div class="es-ring">←</div>
+      <h3>Sélectionnez un contrat</h3>
+      <p>Cliquez sur le contrat actuel du client dans la liste pour lancer l'analyse comparative.</p>
+    </div>
 
-<input id="age" type="number" placeholder="Âge">
+    <!-- ══ TAB 1 : PARAMÈTRES & FRAIS ══ -->
+    <div class="tab-panel active" id="tab-params">
 
-<!-- NOUVEAUX CHAMPS -->
-<input id="birthdate" type="date" placeholder="Date de naissance">
-<input id="idExpiry" type="date" placeholder="Date d'expiration pièce d'identité">
+      <!-- Simulation params -->
+      <div class="card">
+        <div class="card-title">Paramètres de simulation</div>
+        <div class="two-col" style="margin-bottom:16px">
+          <div class="pgroup">
+            <label>Versement mensuel</label>
+            <div class="srow"><input type="range" class="g-sl" id="slv" min="100" max="5000" step="50" value="500" oninput="run()"><div class="sv g" id="ov">500 €</div></div>
+          </div>
+          <div class="pgroup">
+            <label>Durée de placement</label>
+            <div class="srow"><input type="range" class="g-sl" id="sld" min="5" max="40" step="1" value="20" oninput="run()"><div class="sv g" id="od">20 ans</div></div>
+          </div>
+        </div>
+        <!-- Rendements & répartition UC / Fonds euros -->
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+          <div class="sdiv-title" style="margin-bottom:12px">Plus-value UC &amp; répartition du portefeuille</div>
+          <div class="two-col">
 
-<input id="income" type="number" placeholder="Revenus annuels">
-<input id="monthly" type="number" placeholder="Versement mensuel">
+            <!-- Generali -->
+            <div>
+              <div class="fee-col-head">
+                <div class="fc-dot" style="background:var(--gen)"></div>
+                <span class="fc-title" style="color:var(--gen)">Generali — La Retraite TNS</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div class="pgroup">
+                  <label>Rendement UC brut / an</label>
+                  <div class="srow"><input type="range" class="g-sl" id="g-uc-rate" min="0" max="15" step="0.1" value="6.5" oninput="syncPct('g-uc-rate','g-uc-rate-l')"><div class="sv g" id="g-uc-rate-l">6,50 %</div></div>
+                </div>
+                <div class="pgroup">
+                  <label>Part UC dans le portefeuille</label>
+                  <div class="srow"><input type="range" class="g-sl" id="g-uc-share" min="0" max="100" step="5" value="50" oninput="syncShare('g-uc-share','g-uc-share-l','g-eu-share-l')"><div class="sv g" id="g-uc-share-l">50 %</div></div>
+                </div>
+                <div class="pgroup">
+                  <label>Part fonds euros dans le portefeuille</label>
+                  <div class="srow"><input type="range" class="g-sl" id="g-eu-share" min="0" max="100" step="5" value="50" oninput="syncShare('g-eu-share','g-eu-share-l','g-uc-share-l')"><div class="sv g" id="g-eu-share-l">50 %</div></div>
+                </div>
+                <div id="g-blend-info" style="font-size:.63rem;color:var(--text3);line-height:1.6;background:var(--surface2);border-radius:6px;padding:7px 10px"></div>
+              </div>
+            </div>
 
-<button onclick="simulate()">Lancer l’analyse</button>
+            <!-- Concurrent -->
+            <div>
+              <div class="fee-col-head">
+                <div class="fc-dot" style="background:var(--oth)"></div>
+                <span class="fc-title" style="color:var(--oth)" id="uc-rate-oth-title">Contrat concurrent</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div class="pgroup">
+                  <label>Rendement UC brut / an</label>
+                  <div class="srow"><input type="range" class="o-sl" id="o-uc-rate" min="0" max="15" step="0.1" value="6.5" oninput="syncPct('o-uc-rate','o-uc-rate-l')"><div class="sv b" id="o-uc-rate-l">6,50 %</div></div>
+                </div>
+                <div class="pgroup">
+                  <label>Part UC dans le portefeuille</label>
+                  <div class="srow"><input type="range" class="o-sl" id="o-uc-share" min="0" max="100" step="5" value="50" oninput="syncShare('o-uc-share','o-uc-share-l','o-eu-share-l')"><div class="sv b" id="o-uc-share-l">50 %</div></div>
+                </div>
+                <div class="pgroup">
+                  <label>Part fonds euros dans le portefeuille</label>
+                  <div class="srow"><input type="range" class="o-sl" id="o-eu-share" min="0" max="100" step="5" value="50" oninput="syncShare('o-eu-share','o-eu-share-l','o-uc-share-l')"><div class="sv b" id="o-eu-share-l">50 %</div></div>
+                </div>
+                <div id="o-blend-info" style="font-size:.63rem;color:var(--text3);line-height:1.6;background:var(--surface2);border-radius:6px;padding:7px 10px"></div>
+              </div>
+            </div>
 
-<div id="loaderContainer">
-  <div class="loader-bg">
-    <div id="loaderBar"></div>
-  </div>
-  <div id="loaderText" class="loader-text">
-    Accès au comparateur privé sécurisé...
-  </div>
-</div>
+          </div>
+        </div>
+      </div>
 
-</div>
+      <!-- Fees edit -->
+      <div class="card">
+        <div class="card-title">Frais réels du client — <span>modifiables</span></div>
+        <div class="two-col">
 
-<div class="card">
-<h2>Sélection prioritaire</h2>
-<div id="results"></div>
-<button id="moreBtn" onclick="showMore()">Afficher plus</button>
-</div>
+          <!-- Generali -->
+          <div>
+            <div class="fee-col-head">
+              <div class="fc-dot" style="background:var(--gen)"></div>
+              <span class="fc-title" style="color:var(--gen)">Generali — La Retraite TNS</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="pgroup"><label>Frais sur versements</label>
+                <div class="srow"><input type="range" class="g-sl" id="g-v" min="0" max="5" step="0.01" value="0.95" oninput="syncPct('g-v','g-v-l')"><div class="sv g" id="g-v-l">0,95 %</div></div></div>
+              <div class="pgroup"><label>Frais de gestion UC / an</label>
+                <div class="srow"><input type="range" class="g-sl" id="g-uc" min="0" max="2" step="0.01" value="0.96" oninput="syncPct('g-uc','g-uc-l')"><div class="sv g" id="g-uc-l">0,96 %</div></div></div>
+              <div class="pgroup"><label>Frais de gestion € / an</label>
+                <div class="srow"><input type="range" class="g-sl" id="g-eu" min="0" max="2" step="0.01" value="0.70" oninput="syncPct('g-eu','g-eu-l')"><div class="sv g" id="g-eu-l">0,70 %</div></div></div>
+              <div class="pgroup"><label>Frais arrérages rente — %</label>
+                <div class="srow"><input type="range" class="g-sl" id="g-sr" min="0" max="5" step="0.01" value="0" oninput="syncPct('g-sr','g-sr-l')"><div class="sv g" id="g-sr-l">0,00 %</div></div></div>
+              <div class="pgroup"><label>Frais arrérages rente — € fixes</label>
+                <div class="srow"><input type="range" class="g-sl" id="g-se" min="0" max="50" step="0.5" value="0" oninput="syncEur('g-se','g-se-l')"><div class="sv g" id="g-se-l">0 €</div></div></div>
+            </div>
+          </div>
 
-<div class="card">
-<h2>Projection retraite</h2>
-<div class="chart-box">
-  <canvas id="chart"></canvas>
-</div>
-</div>
+          <!-- Concurrent -->
+          <div>
+            <div class="fee-col-head">
+              <div class="fc-dot" style="background:var(--oth)"></div>
+              <span class="fc-title" style="color:var(--oth)" id="oth-title">Contrat concurrent</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="pgroup"><label>Frais sur versements</label>
+                <div class="srow"><input type="range" class="o-sl" id="o-v" min="0" max="5" step="0.01" value="2.50" oninput="syncPct('o-v','o-v-l')"><div class="sv b" id="o-v-l">2,50 %</div></div></div>
+              <div class="pgroup"><label>Frais de gestion UC / an</label>
+                <div class="srow"><input type="range" class="o-sl" id="o-uc" min="0" max="2" step="0.01" value="0.96" oninput="syncPct('o-uc','o-uc-l')"><div class="sv b" id="o-uc-l">0,96 %</div></div></div>
+              <div class="pgroup"><label>Frais de gestion € / an</label>
+                <div class="srow"><input type="range" class="o-sl" id="o-eu" min="0" max="2" step="0.01" value="0.75" oninput="syncPct('o-eu','o-eu-l')"><div class="sv b" id="o-eu-l">0,75 %</div></div></div>
+              <div class="pgroup"><label>Frais arrérages rente — %</label>
+                <div class="srow"><input type="range" class="o-sl" id="o-sr" min="0" max="5" step="0.01" value="0" oninput="syncPct('o-sr','o-sr-l')"><div class="sv b" id="o-sr-l">0,00 %</div></div></div>
+              <div class="pgroup"><label>Frais arrérages rente — € fixes</label>
+                <div class="srow"><input type="range" class="o-sl" id="o-se" min="0" max="50" step="0.5" value="0" oninput="syncEur('o-se','o-se-l')"><div class="sv b" id="o-se-l">0 €</div></div></div>
+            </div>
+          </div>
 
+        </div>
+        <div style="font-size:.62rem;color:var(--text3);margin-top:14px;padding-top:10px;border-top:1px solid var(--border)">
+          ✏️ Les valeurs par défaut sont chargées depuis les notices officielles. Ajustez selon la situation réelle du client — les calculs se mettent à jour en temps réel sur tous les onglets.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ TAB 2 : COMPARATIF ══ -->
+    <div class="tab-panel" id="tab-compare">
+
+      <div class="two-col" id="cmp-grid"></div>
+      <div class="four-col" id="kpi-strip"></div>
+      <div id="summary-block"></div>
+
+    </div>
+
+    <!-- ══ TAB 3 : SORTIE RENTE ══ -->
+    <div class="tab-panel" id="tab-rente">
+
+      <!-- Rente slider -->
+      <div class="card">
+        <div class="card-title">Rente mensuelle du client</div>
+        <div class="two-col" style="align-items:end">
+          <div class="pgroup">
+            <label>Montant de rente mensuelle brute (€/mois)</label>
+            <div class="srow"><input type="range" class="n-sl" id="sl-rente" min="100" max="5000" step="50" value="1000" oninput="syncRente()"><div class="sv n" id="rente-lbl">1 000 €/mois</div></div>
+          </div>
+          <div style="font-size:.72rem;color:var(--text2);line-height:1.6;padding-bottom:4px">
+            Simulez l'impact des frais d'arrérages sur la rente réelle du client. Modifiez les % et € dans l'onglet Paramètres.
+          </div>
+        </div>
+      </div>
+
+      <div id="sortie-alert-block"></div>
+      <div class="three-col" id="sortie-kpis"></div>
+
+    </div>
+
+    <!-- ══ TAB 4 : PROJECTION ══ -->
+    <div class="tab-panel" id="tab-projection">
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="card-title" style="margin-bottom:0">Projection du capital</div>
+          <div style="display:flex;gap:14px" id="chart-legend"></div>
+        </div>
+        <div class="chart-wrap"><canvas id="mchart"></canvas></div>
+      </div>
+
+      <div class="t-card">
+        <table>
+          <thead><tr>
+            <th>Année</th>
+            <th>Capital Generali</th>
+            <th id="thoth">Capital concurrent</th>
+            <th>Avantage Generali</th>
+            <th>Écart %</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="note-bar" id="notebar"></div>
+
+    </div>
+
+    <!-- ══ TAB 5 : RÉCAPITULATIF FRAIS ══ -->
+    <div class="tab-panel" id="tab-recap">
+      <div class="recap-hero" id="recap-hero"></div>
+      <div class="recap-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:34%">Poste de frais</th>
+              <th class="th-gen">Generali</th>
+              <th class="th-oth" id="recap-th-oth">Concurrent</th>
+              <th class="th-diff">Économie Generali</th>
+            </tr>
+          </thead>
+          <tbody id="recap-tbody"></tbody>
+        </table>
+      </div>
+      <div class="recap-note" id="recap-note"></div>
+    </div>
+
+  </main>
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+const GEN_DEF = {v:0.95,uc:0.96,eu:0.70,sr:0.00};
+const DB = [
+{id:'axa',      name:'FAR PER / PER Ma Retraite',       company:'AXA / AGIPI',               cat:'reseau', def:{v:5.00,uc:0.85,eu:0.75,sr:0.00}, euro:[null,null,1.00,2.00,2.25,2.75,3.25]},
+{id:'allianz',  name:'PER Allianz Fidélité',             company:'Allianz France',             cat:'reseau', def:{v:4.00,uc:0.96,eu:0.75,sr:0.00}, euro:[null,null,null,null,null,2.52,2.08]},
+{id:'swisslife',name:'PER SwissLife',                    company:'Swiss Life',                 cat:'reseau', def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,1.70], note:'Fonds euro modeste — accent gestion pilotée'},
+{id:'ag2r',     name:'PER Ambition Retraite',            company:'AG2R La Mondiale',           cat:'reseau', def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'groupama', name:'PER Nouvelle Vie',                 company:'Groupama Gan Vie',           cat:'reseau', def:{v:3.50,uc:0.96,eu:0.75,sr:0.00}, euro:[null,null,null,null,null,2.00,2.00]},
+{id:'gan',      name:'PER Gan Patrimoine',               company:'Groupama Gan Vie',           cat:'reseau', def:{v:3.50,uc:0.96,eu:0.75,sr:0.00}, euro:[null,null,null,null,null,2.00,3.02]},
+{id:'mma',      name:'PER MMA Signature',                company:'MMA Vie (Covéa)',            cat:'reseau', def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'abeille',  name:'PER Abeille Assurances',           company:'Abeille Assurances',         cat:'reseau', def:{v:3.00,uc:0.96,eu:0.75,sr:0.00}, euro:[1.35,1.00,0.90,1.20,2.03,2.10,2.10]},
+{id:'afer',     name:'Afer Retraite Individuelle',       company:'AFER / Abeille',             cat:'reseau', def:{v:2.00,uc:0.96,eu:0.60,sr:0.00}, euro:[null,1.25,1.15,1.25,3.50,3.50,3.50]},
+{id:'bnp',      name:'Cardif Elite / Multiplacements',   company:'BNP Paribas Cardif',         cat:'reseau', def:{v:4.00,uc:0.96,eu:0.75,sr:0.00}, euro:[1.40,1.20,1.10,2.00,3.00,2.75,2.75]},
+{id:'cnp',      name:'PER CNP Assurances',               company:'CNP Assurances',             cat:'reseau', def:{v:4.00,uc:0.96,eu:0.75,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'apicil',   name:'PER Apicil',                       company:'Apicil Épargne',             cat:'reseau', def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'primonial',name:'PrimoPER',                         company:'Primonial / Oradéa Vie',     cat:'reseau', def:{v:3.00,uc:0.96,eu:0.70,sr:0.00}, euro:[null,1.10,1.20,2.00,3.25,3.50,3.50]},
+{id:'gen_patri',name:'PER Generali Patrimoine',          company:'Generali Patrimoine',        cat:'reseau', def:{v:4.00,uc:1.10,eu:0.96,sr:0.00}, euro:[1.50,1.40,1.20,2.50,3.50,3.40,3.30], note:'Haut de gamme — frais UC jusqu\'à 1,10%'},
+// Mutuelles
+{id:'macsf',    name:'RES Retraite',                     company:'MACSF',                      cat:'mutuelle',def:{v:0.60,uc:0.50,eu:0.50,sr:3.00}, euro:[null,1.60,2.10,2.50,3.10,3.10,3.15], note:'Versement auto 0,6% (libres 3%) · Gestion 0,5% · Frais rente 3% · Pas d\'ETF'},
+{id:'medicis',  name:'PER Médicis Multisupport',         company:'Malakoff Humanis / Médicis', cat:'mutuelle',def:{v:3.00,uc:0.96,eu:0.75,sr:0.00}, euro:[null,null,null,3.10,4.00,4.00,4.00]},
+{id:'malakoff', name:'PER Malakoff Humanis',             company:'Malakoff Humanis',           cat:'mutuelle',def:{v:3.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'maaf',     name:'PER Winalto Retraite',             company:'MAAF (Covéa)',               cat:'mutuelle',def:{v:3.50,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'gmf',      name:'PER GMF',                          company:'GMF Vie (Covéa)',            cat:'mutuelle',def:{v:3.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,2.70,2.50]},
+{id:'matmut',   name:'PER Complice Retraite',            company:'Matmut',                     cat:'mutuelle',def:{v:3.00,uc:0.96,eu:0.75,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'carac',    name:'PER Individuel Carac',             company:'Carac',                      cat:'mutuelle',def:{v:0.00,uc:0.86,eu:0.70,sr:0.00}, euro:[null,null,null,2.50,3.60,4.00,4.05], note:'0% versement · Fonds euro 4,05% 2025 · Pas d\'ETF'},
+{id:'lfm',      name:'LFM PER\'FORM',                   company:'La France Mutualiste',       cat:'mutuelle',def:{v:0.00,uc:0.96,eu:0.60,sr:0.00}, euro:[null,1.70,1.60,2.31,4.30,4.00,4.00], note:'0% versement · Fonds euro 4%/an 2025'},
+{id:'maif',     name:'PER Responsable & Solidaire',      company:'MAIF Vie',                   cat:'mutuelle',def:{v:0.00,uc:0.60,eu:0.60,sr:0.00}, euro:[null,1.30,1.30,2.10,2.50,3.00,3.05]},
+{id:'ampli',    name:'AMPLI-PER Liberté',                company:'Ampli Mutuelle',             cat:'mutuelle',def:{v:2.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,1.70,2.10,2.80,3.50,3.50,3.00]},
+{id:'prefon',   name:'PER Préfon-Retraite',              company:'Préfon',                     cat:'mutuelle',def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+// Banques
+{id:'ca',       name:'PER Assurance Perspective',        company:'Crédit Agricole / Predica',  cat:'banque',  def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[1.50,1.60,1.70,2.79,3.17,3.15,3.05]},
+{id:'cm',       name:'PER Assurance Retraite',           company:'Crédit Mutuel / ACM Vie',    cat:'banque',  def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,1.15,1.44,2.25,2.75,2.75,2.75]},
+{id:'sg',       name:'PER ACACIA',                       company:'Société Générale / Sogécap', cat:'banque',  def:{v:4.00,uc:0.96,eu:0.85,sr:0.00}, euro:[1.20,1.10,1.20,null,3.25,3.25,3.25]},
+{id:'bpce',     name:'PER BPCE',                         company:'Banque Populaire / CE',      cat:'banque',  def:{v:4.00,uc:0.96,eu:0.80,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'lcl',      name:'LCL Retraite PER',                 company:'LCL / Predica',              cat:'banque',  def:{v:4.00,uc:0.96,eu:0.85,sr:0.00}, euro:[1.50,1.60,1.70,2.79,3.17,3.15,3.05]},
+{id:'lbp',      name:'PER La Banque Postale',            company:'La Banque Postale',          cat:'banque',  def:{v:3.50,uc:0.96,eu:0.75,sr:0.00}, euro:[null,null,null,null,null,null,null]},
+{id:'bourso',   name:'PER Matla',                        company:'Boursorama / Oradéa Vie',    cat:'banque',  def:{v:0.00,uc:0.85,eu:0.60,sr:0.00}, euro:[null,null,1.35,2.30,3.50,3.50,3.50], note:'Gestion pilotée ETF ~0,85-0,99% tout compris'},
+// Internet
+{id:'linxea',   name:'Linxea Spirit PER',                company:'Linxea / Spirica',           cat:'online',  def:{v:0.00,uc:0.50,eu:0.70,sr:0.00}, euro:[null,1.65,1.65,2.30,3.13,3.13,3.08], note:'Grand Prix TOP PER 2025 · 0,5% UC · 820 fonds dont 68 ETF'},
+{id:'pdirect',  name:'PER Placement-direct ISR',         company:'Placement-direct / UMR',     cat:'online',  def:{v:0.00,uc:0.50,eu:0.60,sr:0.00}, euro:[null,null,null,2.70,3.30,3.60,4.00], note:'0% versement · Fonds euro 4% 2025 · ISR Article 9'},
+{id:'mtp',      name:'PER MeilleurTaux Placement',       company:'MeilleurTaux / Spirica',     cat:'online',  def:{v:0.00,uc:0.50,eu:0.70,sr:0.00}, euro:[null,1.65,1.65,2.30,3.13,3.13,3.08]},
+{id:'yomoni',   name:'Yomoni Retraite+',                 company:'Yomoni',                     cat:'online',  def:{v:0.00,uc:0.30,eu:0.30,sr:0.00}, euro:[null,null,null,null,null,null,null], note:'Gestion pilotée 100% ETF · Total ~1,6%/an · Pas de fonds euros classique'},
+{id:'ramify',   name:'PER Ramify',                       company:'Ramify',                     cat:'online',  def:{v:0.00,uc:0.50,eu:0.50,sr:0.00}, euro:[null,null,null,null,null,null,null], note:'Gestion pilotée ETF + PE · Total ~1,3-1,4%/an · Pas de fonds euros classique'},
+{id:'fortuneo', name:'Fortuneo PER',                     company:'Fortuneo / Suravenir',       cat:'online',  def:{v:0.00,uc:0.60,eu:0.60,sr:0.00}, euro:[null,null,null,null,null,null,3.20]},
+{id:'lucya',    name:'Lucya Cardif PER',                 company:'Cardif / BNP Paribas',       cat:'online',  def:{v:0.00,uc:0.50,eu:0.60,sr:0.00}, euro:[null,null,null,null,null,null,2.75], note:'0,5% gestion UC · Fonds euro ~3,17% avec bonus'},
+{id:'suravenir',name:'PER Suravenir Opportunités',       company:'Suravenir',                  cat:'online',  def:{v:0.00,uc:0.70,eu:0.60,sr:0.00}, euro:[2.00,1.70,1.50,2.10,2.65,3.00,3.00]},
+{id:'oradea',   name:'PER LIGNAGE',                      company:'Oradéa Vie',                 cat:'online',  def:{v:0.00,uc:0.70,eu:0.60,sr:0.00}, euro:[1.20,1.10,1.20,null,3.50,3.50,3.50]},
+{id:'eres',     name:'PER Eres by Spirica',              company:'Eres / Spirica',             cat:'online',  def:{v:0.00,uc:0.80,eu:0.70,sr:0.00}, euro:[null,null,1.35,2.00,2.83,2.83,2.78]},
+];
 
-/* =========================
-   SHUFFLE
-========================= */
-function shuffle(array){
-  for(let i=array.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [array[i],array[j]]=[array[j],array[i]];
+const YL=['2019','2020','2021','2022','2023','2024','2025'];
+const MKT=[1.70,1.45,1.30,1.90,2.60,2.60,2.65];
+const SC={bear:.03,base:.065,bull:.095};
+const GEN_EURO=[1.60,1.40,1.20,2.50,3.50,3.40,3.30];
+
+const fmt  = v=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
+const fmtD = v=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:2}).format(v);
+const fmtK = v=>v>=1e6?(v/1e6).toFixed(2).replace('.',',')+'M€':v>=1000?Math.round(v/1000)+'k€':Math.round(v)+'€';
+const pavg = a=>{const f=a.filter(x=>x!==null&&x>0);return f.length?f.reduce((s,x)=>s+x,0)/f.length:null};
+
+let selId=null, filter='all', chartInst=null;
+
+// ── HELPERS ──
+function getG(){return{
+  v:+$('g-v').value, uc:+$('g-uc').value, eu:+$('g-eu').value,
+  sr:+$('g-sr').value, se:+$('g-se').value,
+  ucRate:+$('g-uc-rate').value,
+  ucShare:+$('g-uc-share').value/100,
+  euShare:+$('g-eu-share').value/100
+}}
+function getO(){return{
+  v:+$('o-v').value, uc:+$('o-uc').value, eu:+$('o-eu').value,
+  sr:+$('o-sr').value, se:+$('o-se').value,
+  ucRate:+$('o-uc-rate').value,
+  ucShare:+$('o-uc-share').value/100,
+  euShare:+$('o-eu-share').value/100
+}}
+function getRente(){return +$('sl-rente').value}
+function $(id){return document.getElementById(id)}
+
+// ── SYNC ──
+function syncPct(sid,lid){const v=+$(sid).value;$(lid).textContent=v.toFixed(2).replace('.',',')+' %';run()}
+function syncEur(sid,lid){const v=+$(sid).value;$(lid).textContent=(v%1===0?v:v.toFixed(1).replace('.',','))+' €';run()}
+function syncRente(){const v=getRente();$('rente-lbl').textContent=new Intl.NumberFormat('fr-FR').format(v)+' €/mois';run()}
+
+// Quand on bouge UC share → fonds euros share se règle au complément, et vice versa
+function syncShare(moveSid, moveLid, otherLid){
+  const mv = +$(moveSid).value;
+  // Calculer l'autre id depuis le label id (g-uc-share-l → g-eu-share, etc.)
+  const otherId = otherLid.replace('-l','');
+  const complement = Math.max(0, 100 - mv);
+  $(otherId).value = complement;
+  $(moveLid).textContent  = mv + ' %';
+  $(otherLid).textContent = complement + ' %';
+  run();
+}
+
+function setSliders(prefix,def){
+  ['v','uc','eu','sr'].forEach(k=>{
+    const e=$(prefix+'-'+k),l=$(prefix+'-'+k+'-l');
+    if(e&&l){e.value=def[k];l.textContent=def[k].toFixed(2).replace('.',',')+' %';}
+  });
+  const se=$(prefix+'-se'),sl=$(prefix+'-se-l');
+  if(se&&sl){se.value=0;sl.textContent='0 €';}
+}
+
+// ── SIMULATE ──
+function simulate(net,rate,years){
+  const r=rate/12;let c=0;const a=[0];
+  for(let m=0;m<years*12;m++){c=c*(1+r)+net;if((m+1)%12===0)a.push(Math.round(c));}
+  return a;
+}
+function netRate(euroArr, ucRatePct, mgmtUC, mgmtEU, ucShare, euShare){
+  // Normalise les parts (au cas où elles ne somment pas à 1)
+  const total = ucShare + euShare;
+  const wUC  = total > 0 ? ucShare / total : 0.5;
+  const wEU  = total > 0 ? euShare / total : 0.5;
+  // Moy. fonds euros historique de ce contrat (net de frais)
+  const hist = euroArr.filter(x=>x!==null&&x>0);
+  const euroHist = hist.length>=3 ? pavg(hist)/100 : pavg(MKT)/100;
+  // Rendement brut blendé = part UC × rendement UC brut + part euros × rendement euros historique
+  const blended = wUC * (ucRatePct/100) + wEU * euroHist;
+  // Frais de gestion pondérés par part
+  const mgmt = wUC * (mgmtUC/100) + wEU * (mgmtEU/100);
+  return blended - mgmt;
+}
+
+// ── RUN ──
+function run(){
+  if(!selId)return;
+  const C=DB.find(c=>c.id===selId);if(!C)return;
+  const monthly=+$('slv').value, years=+$('sld').value;
+  $('ov').textContent=monthly+' €'; $('od').textContent=years+' ans';
+
+  const GF=getG(), OF=getO();
+  const genNet=monthly*(1-GF.v/100), othNet=monthly*(1-OF.v/100);
+
+  // Rendements nets avec blending ajustable
+  const genRateNet = netRate(GEN_EURO, GF.ucRate, GF.uc, GF.eu, GF.ucShare, GF.euShare);
+  const othRateNet = netRate(C.euro,   OF.ucRate, OF.uc, OF.eu, OF.ucShare, OF.euShare);
+
+  const genArr=simulate(genNet, genRateNet, years);
+  const othArr=simulate(othNet, othRateNet, years);
+  const genF=genArr[years], othF=othArr[years];
+
+  // Blend info boxes
+  const genEuroHistAvgPct = (()=>{const h=GEN_EURO.filter(x=>x!==null&&x>0);return h.length>=3?pavg(h):pavg(MKT);})();
+  const othEuroHistAvgPct = (()=>{const h=C.euro.filter(x=>x!==null&&x>0);return h.length>=3?pavg(h):pavg(MKT);})();
+  const genTotalW = GF.ucShare + GF.euShare, othTotalW = OF.ucShare + OF.euShare;
+  const gWUC = genTotalW>0?GF.ucShare/genTotalW:0.5, gWEU = genTotalW>0?GF.euShare/genTotalW:0.5;
+  const oWUC = othTotalW>0?OF.ucShare/othTotalW:0.5, oWEU = othTotalW>0?OF.euShare/othTotalW:0.5;
+  const genBlendBrut = gWUC*GF.ucRate + gWEU*genEuroHistAvgPct;
+  const othBlendBrut = oWUC*OF.ucRate + oWEU*othEuroHistAvgPct;
+  const genMgmt = gWUC*GF.uc + gWEU*GF.eu;
+  const othMgmt = oWUC*OF.uc + oWEU*OF.eu;
+
+  const binfo = (wUC,wEU,ucR,euH,bBrut,mgmt,netR,col)=>`
+    <strong style="color:${col}">Rendement net retenu : ${(netR*100).toFixed(2).replace('.',',')} %</strong><br>
+    UC ${(wUC*100).toFixed(0)}% × ${ucR.toFixed(1).replace('.',',')}% brut
+    + Fonds € ${(wEU*100).toFixed(0)}% × ${euH.toFixed(2).replace('.',',')}% hist.
+    = ${bBrut.toFixed(2).replace('.',',')}% brut − ${mgmt.toFixed(2).replace('.',',')}% frais gestion
+    = <strong>${(netR*100).toFixed(2).replace('.',',')}%</strong> net annuel`;
+
+  if($('g-blend-info')) $('g-blend-info').innerHTML = binfo(gWUC,gWEU,GF.ucRate,genEuroHistAvgPct,genBlendBrut,genMgmt,genRateNet,'var(--gen)');
+  if($('o-blend-info')) $('o-blend-info').innerHTML = binfo(oWUC,oWEU,OF.ucRate,othEuroHistAvgPct,othBlendBrut,othMgmt,othRateNet,'var(--oth)');
+  const diff=genF-othF, pct=othF>0?(diff/othF*100):0;
+  const totalV=monthly*12*years;
+  const extraV=monthly*(OF.v/100)*12*years - monthly*(GF.v/100)*12*years;
+  const genAvg=pavg(GEN_EURO), othAvg=pavg(C.euro.filter(x=>x!==null&&x>0));
+
+  // Badge in tab
+  $('tab-diff-badge').textContent=(diff>=0?'+':'')+fmtK(diff);
+  $('tab-diff-badge').style.color=diff>=0?'var(--green)':'var(--red)';
+
+  // Rente
+  const rente=getRente(), renteAn=rente*12;
+  const genFrR=renteAn*(GF.sr/100)+GF.se*4;
+  const othFrR=renteAn*(OF.sr/100)+OF.se*4;
+  const diffR=othFrR-genFrR;
+
+  // ── TAB 2 : COMPARATIF ──
+  const fc=(gv,ov)=>ov>gv?'bad':'ok';
+  const fcs=(gv,ov)=>ov>gv?'bad':'ok';
+  $('cmp-grid').innerHTML=`
+    <div class="cmp-card gen">
+      <div class="cmp-brand"><div class="cb-dot" style="background:var(--gen)"></div><span class="cb-name" style="color:var(--gen)">Generali</span></div>
+      <div class="cmp-title">La Retraite TNS</div>
+      <div class="fee-boxes">
+        <div class="fbox"><div class="fbox-lbl">Versements</div><div class="fbox-val g">${GF.v.toFixed(2).replace('.',',')} %</div></div>
+        <div class="fbox"><div class="fbox-lbl">Gestion UC</div><div class="fbox-val g">${GF.uc.toFixed(2).replace('.',',')} %</div></div>
+        <div class="fbox"><div class="fbox-lbl">Gestion €</div><div class="fbox-val g">${GF.eu.toFixed(2).replace('.',',')} %</div></div>
+        <div class="fbox"><div class="fbox-lbl">Sortie rente</div><div class="fbox-val ${GF.sr>0?'warn':'g'}">${GF.sr.toFixed(2).replace('.',',')} %</div></div>
+      </div>
+      <div class="perf-section"><div class="perf-label">Fonds euros historique (net de frais)</div>
+        <div class="perf-row">${GEN_EURO.map((v,i)=>`<div class="py"><div class="py-y">${YL[i]}</div><div class="py-v g">${v.toFixed(2).replace('.',',')}%</div></div>`).join('')}</div>
+        <div class="avg-pill"><span style="font-size:.65rem;color:var(--text2)">Moyenne :</span><span class="av" style="color:var(--gen)">${genAvg.toFixed(2).replace('.',',')} %/an</span></div>
+      </div>
+    </div>
+    <div class="cmp-card oth">
+      <div class="cmp-brand"><div class="cb-dot" style="background:var(--oth)"></div><span class="cb-name" style="color:var(--oth)">${C.company}</span></div>
+      <div class="cmp-title">${C.name}</div>
+      <div class="fee-boxes">
+        <div class="fbox"><div class="fbox-lbl">Versements</div><div class="fbox-val ${fc(GF.v,OF.v)}">${OF.v.toFixed(2).replace('.',',')} %</div></div>
+        <div class="fbox"><div class="fbox-lbl">Gestion UC</div><div class="fbox-val ${fc(GF.uc,OF.uc)}">${OF.uc.toFixed(2).replace('.',',')} %</div></div>
+        <div class="fbox"><div class="fbox-lbl">Gestion €</div><div class="fbox-val ${fc(GF.eu,OF.eu)}">${OF.eu.toFixed(2).replace('.',',')} %</div></div>
+        <div class="fbox"><div class="fbox-lbl">Sortie rente</div><div class="fbox-val ${fcs(GF.sr,OF.sr)}">${OF.sr.toFixed(2).replace('.',',')} %</div></div>
+      </div>
+      <div class="perf-section"><div class="perf-label">Fonds euros historique (net de frais)</div>
+        <div class="perf-row">${C.euro.map((v,i)=>`<div class="py"><div class="py-y">${YL[i]}</div><div class="py-v ${v!==null&&v>0?'b':'na'}">${v!==null&&v>0?v.toFixed(2).replace('.',',')+' %':'n.d.'}</div></div>`).join('')}</div>
+        <div class="avg-pill"><span style="font-size:.65rem;color:var(--text2)">Moyenne :</span><span class="av" style="color:var(--oth)">${othAvg?othAvg.toFixed(2).replace('.',',')+' %/an':'n.d.'}</span></div>
+        ${C.note?`<div style="font-size:.62rem;color:var(--text3);margin-top:7px;line-height:1.5">ℹ️ ${C.note}</div>`:''}
+      </div>
+    </div>`;
+
+  $('kpi-strip').innerHTML=`
+    <div class="kpi ${diff>=0?'win':''}">
+      <div class="kpi-label">Capital Generali à ${years} ans</div>
+      <div class="kpi-val g">${fmt(genF)}</div>
+      <div class="kpi-sub">× ${(genF/totalV).toFixed(2)} les versements</div>
+    </div>
+    <div class="kpi ${diff<0?'win':'lose'}">
+      <div class="kpi-label">Capital ${C.name.substring(0,20)}</div>
+      <div class="kpi-val b">${fmt(othF)}</div>
+      <div class="kpi-sub">× ${(othF/totalV).toFixed(2)} les versements</div>
+    </div>
+    <div class="kpi info">
+      <div class="kpi-label">Avantage Generali</div>
+      <div class="kpi-val ${diff>=0?'gn':'rd'}">${diff>=0?'+':''}${fmt(diff)}</div>
+      <div class="kpi-sub">${diff>=0?'+':''}${pct.toFixed(1).replace('.',',')} % de capital</div>
+    </div>
+    <div class="kpi info">
+      <div class="kpi-label">Surplus frais versements concurrent</div>
+      <div class="kpi-val ${extraV>0?'rd':'gn'}">${extraV>=0?'+':''}${fmt(extraV)}</div>
+      <div class="kpi-sub">sur ${years} ans</div>
+    </div>`;
+
+  $('summary-block').innerHTML=`
+    <div class="summary ${diff>=0?'pos':'neg'}">
+      <div class="s-icon">${diff>=0?'📉':'✅'}</div>
+      <div class="s-text">
+        <h3>${diff>=0?'Coût du statu quo pour le client':'Contrat concurrent compétitif'}</h3>
+        <p>${diff>=0
+          ?`En conservant ce contrat, le client laisse <strong>${fmt(diff)}</strong> de côté à l'échéance. Frais de versement en surplus : <strong>${fmt(extraV)}</strong>.${diffR>0?' Avantage supplémentaire Generali en rente : <strong>+'+fmtD(diffR/12)+'/mois</strong>.':''}`
+          :`Ce contrat affiche un rendement fonds euros historique supérieur. Argument Generali : frais de versement ${GF.v.toFixed(2).replace('.',',')}% vs ${OF.v.toFixed(2).replace('.',',')}% — économie de <strong>${fmt(Math.abs(extraV))}</strong>.${diffR>0?' Avantage Generali en sortie rente : <strong>+'+fmtD(diffR/12)+'/mois</strong>.':''}`}
+        </p>
+      </div>
+      <div class="s-val">
+        <div class="s-big" style="color:${diff>=0?'var(--red)':'var(--green)'}">${diff>=0?'+':''}${fmt(diff)}</div>
+        <div class="s-lbl">écart à ${years} ans</div>
+      </div>
+    </div>`;
+
+  // ── TAB 3 : SORTIE RENTE ──
+  const hasR=OF.sr>0||GF.sr>0||OF.se>0||GF.se>0;
+  $('sortie-alert-block').innerHTML=hasR?`
+    <div class="alert-banner ${diffR>=0?'':''}">
+      <strong>⚠️ Frais sur arrérages de rente — simulation sur ${new Intl.NumberFormat('fr-FR').format(rente)} €/mois</strong><br>
+      Generali : ${GF.sr>0?`<strong>${GF.sr.toFixed(2).replace('.',',')} %</strong>`:'0 %'}${GF.se>0?` + <strong>${GF.se.toFixed(1).replace('.',',')} €</strong> fixes/versement`:''} 
+      → rente nette <strong>${fmtD((renteAn-genFrR)/12)}/mois</strong> (frais : <strong>${fmtD(genFrR/12)}/mois</strong>).<br>
+      ${C.name} : ${OF.sr>0?`<strong>${OF.sr.toFixed(2).replace('.',',')} %</strong>`:'0 %'}${OF.se>0?` + <strong>${OF.se.toFixed(1).replace('.',',')} €</strong> fixes/versement`:''} 
+      → rente nette <strong>${fmtD((renteAn-othFrR)/12)}/mois</strong> (frais : <strong>${fmtD(othFrR/12)}/mois</strong>).<br>
+      ${diffR>0?`Avantage Generali : <strong>+${fmtD(diffR/12)}/mois</strong>, soit <strong>+${fmtD(diffR)}/an</strong>.`:'Frais identiques des deux côtés.'}
+    </div>`:'<div class="alert-banner green"><strong>✅ Aucun frais sur arrérages</strong> — les deux contrats n\'appliquent pas de frais sur les versements de rente avec les paramètres actuels. Ajustez les curseurs dans l\'onglet Paramètres pour simuler un scénario avec frais.</div>';
+
+  $('sortie-kpis').innerHTML=`
+    <div class="kpi ${genFrR>0?'lose':''}">
+      <div class="kpi-label">Frais rente Generali / mois</div>
+      <div class="kpi-val ${genFrR>0?'og':'gn'}">${fmtD(genFrR/12)}</div>
+      <div class="kpi-sub">Rente nette : ${fmtD((renteAn-genFrR)/12)}/mois</div>
+    </div>
+    <div class="kpi ${othFrR>0?'lose':''}">
+      <div class="kpi-label">Frais rente ${C.name.substring(0,18)} / mois</div>
+      <div class="kpi-val ${othFrR>0?'og':'gn'}">${fmtD(othFrR/12)}</div>
+      <div class="kpi-sub">Rente nette : ${fmtD((renteAn-othFrR)/12)}/mois</div>
+    </div>
+    <div class="kpi ${diffR>=0?'win':''}">
+      <div class="kpi-label">Économie Generali / mois</div>
+      <div class="kpi-val ${diffR>=0?'gn':'rd'}">${diffR>=0?'+':''}${fmtD(diffR/12)}</div>
+      <div class="kpi-sub">Soit ${diffR>=0?'+':''}${fmtD(diffR)}/an en phase de rente</div>
+    </div>`;
+
+  // ── TAB 4 : PROJECTION ──
+  $('chart-legend').innerHTML=`
+    <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text2)"><div style="width:9px;height:9px;border-radius:3px;background:var(--gen)"></div>Generali</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text2)"><div style="width:9px;height:9px;border-radius:3px;background:var(--oth)"></div>${C.name.substring(0,26)}</div>`;
+
+  const labels=Array.from({length:years+1},(_,i)=>i===0?'Départ':(i%5===0?`An ${i}`:''));
+  if(chartInst)chartInst.destroy();
+  chartInst=new Chart($('mchart'),{type:'line',data:{labels,datasets:[
+    {label:'Generali',data:genArr,borderColor:'#c8a44a',backgroundColor:'rgba(200,164,74,.07)',fill:true,tension:.4,pointRadius:0,borderWidth:2.5},
+    {label:C.name,data:othArr,borderColor:'#5889c8',backgroundColor:'rgba(88,137,200,.07)',fill:true,tension:.4,pointRadius:0,borderWidth:2.5}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#1a1a2e',bodyColor:'#5a5c6e',borderColor:'rgba(0,0,0,.12)',borderWidth:1,callbacks:{label:ctx=>ctx.dataset.label+' : '+fmt(ctx.parsed.y)}}},
+    scales:{x:{ticks:{color:'#9a9cae',font:{size:10,family:'DM Mono'},callback:(v,i)=>labels[i]},grid:{display:false}},
+            y:{ticks:{callback:v=>fmtK(v),color:'#9a9cae',font:{size:10,family:'DM Mono'}},grid:{color:'rgba(0,0,0,.06)'}}}}});
+
+  $('thoth').textContent=C.name.substring(0,22);
+  const ms=[];for(let y=Math.min(5,years);y<=years;y+=5)ms.push(y);if(!ms.includes(years))ms.push(years);
+  $('tbody').innerHTML=ms.map(y=>{
+    const g=genArr[Math.min(y,genArr.length-1)],o=othArr[Math.min(y,othArr.length-1)],d=g-o,p=o>0?(d/o*100):0;
+    return `<tr><td class="t-y">An ${y}</td><td class="t-g">${fmt(g)}</td><td class="t-o">${fmt(o)}</td>
+      <td class="${d>=0?'t-p':'t-n'}">${d>=0?'+':''}${fmt(d)}</td>
+      <td class="${d>=0?'t-p':'t-n'}">${d>=0?'+':''}${p.toFixed(1).replace('.',',')} %</td></tr>`;}).join('');
+
+  $('notebar').innerHTML=`Méthode : rendement net = (part UC × taux UC brut + part fonds € × moy. historique fonds €) − frais gestion pondérés.
+    Generali : ${(gWUC*100).toFixed(0)}% UC à ${GF.ucRate.toFixed(1).replace('.',',')}% + ${(gWEU*100).toFixed(0)}% € à ${genEuroHistAvgPct.toFixed(2).replace('.',',')}% → net <strong>${(genRateNet*100).toFixed(2).replace('.',',')}%</strong>.
+    Concurrent : ${(oWUC*100).toFixed(0)}% UC à ${OF.ucRate.toFixed(1).replace('.',',')}% + ${(oWEU*100).toFixed(0)}% € à ${othEuroHistAvgPct.toFixed(2).replace('.',',')}% → net <strong>${(othRateNet*100).toFixed(2).replace('.',',')}%</strong>.
+    Sources : ToutSurMesFinances 2026 · Generali.fr taux PB · Notice officielle MACSF. Document interne — non contractuel.`;
+
+  // ── TAB 5 : RÉCAPITULATIF FRAIS ──
+  const renteAnR=renteAn;
+  const RENTE_DUREE=20; // hypothèse durée de rente 20 ans
+
+  // 1. Frais sur versements (toute la phase épargne)
+  const genFV = monthly*(GF.v/100)*12*years;
+  const othFV = monthly*(OF.v/100)*12*years;
+
+  // 2. Frais de gestion UC sur encours moyen
+  //    Encours moyen ≈ capital final / 2 (approximation linéaire)
+  const genCapMoy = genF/2, othCapMoy = othF/2;
+  const genFGuc = genCapMoy*(GF.uc/100)*years;
+  const othFGuc = othCapMoy*(OF.uc/100)*years;
+
+  // 3. Frais de gestion € sur encours moyen (même approche)
+  const genFGeu = genCapMoy*(GF.eu/100)*years;
+  const othFGeu = othCapMoy*(OF.eu/100)*years;
+
+  // 4. Frais de sortie rente sur 20 ans
+  const genFSR_tot = (renteAnR*(GF.sr/100) + GF.se*4) * RENTE_DUREE;
+  const othFSR_tot = (renteAnR*(OF.sr/100) + OF.se*4) * RENTE_DUREE;
+
+  // Totaux
+  const genTotal = genFV + genFGuc + genFGeu + genFSR_tot;
+  const othTotal = othFV + othFGuc + othFGeu + othFSR_tot;
+  const totalEco  = othTotal - genTotal;
+
+  // Hero cards
+  $('recap-hero').innerHTML=`
+    <div class="rhero total-gen">
+      <div class="rhero-label">Total frais Generali</div>
+      <div class="rhero-val g">${fmt(genTotal)}</div>
+      <div class="rhero-sub">Sur ${years} ans d'épargne + ${RENTE_DUREE} ans de rente · rente ${new Intl.NumberFormat('fr-FR').format(rente)} €/mois</div>
+      <div class="rhero-label">Total frais ${C.name.substring(0,22)}</div>
+      <div class="rhero-val rd">${fmt(othTotal)}</div>
+      <div class="rhero-sub">Sur ${years} ans d'épargne + ${RENTE_DUREE} ans de rente · rente ${new Intl.NumberFormat('fr-FR').format(rente)} €/mois</div>
+    </div>
+    <div class="rhero total-oth">
+      <div class="rhero-label">Économie totale avec Generali</div>
+      <div class="rhero-val ${totalEco>=0?'gn':'rd'}">${totalEco>=0?'+':''}${fmt(totalEco)}</div>
+      <div class="rhero-sub">${totalEco>=0?'Le client économise cette somme avec Generali':'Le concurrent est moins cher sur cette période'}</div>
+    </div>`;
+
+  // Detail table
+  $('recap-th-oth').textContent = C.name.substring(0,20);
+  const D=totalEco>=0;
+  const row=(label,sub,gv,ov,highlight)=>{
+    const eco=ov-gv;
+    const genClass=gv===0?'rt-zero':'rt-gen';
+    const othClass=ov===0?'rt-zero':'rt-oth';
+    const ecoClass=eco>0?'rt-diff-pos':eco<0?'rt-diff-neg':'rt-zero';
+    return `<tr${highlight?' class="total-row"':''}>
+      <td><div class="rt-label">${label}</div>${sub?`<div class="rt-sub">${sub}</div>`:''}</td>
+      <td class="${genClass}">${fmt(gv)}</td>
+      <td class="${othClass}">${fmt(ov)}</td>
+      <td class="${ecoClass}">${eco>=0?'+':''}${fmt(eco)}</td>
+    </tr>`;
+  };
+  const sepRow=label=>`<tr class="sep-row"><td colspan="4">${label}</td></tr>`;
+
+  $('recap-tbody').innerHTML=
+    sepRow('Phase d\'épargne — '+years+' ans')+
+    row('Frais sur versements',
+      `${GF.v.toFixed(2).replace('.',',')}% × ${fmt(monthly)}/mois × ${years} ans`,
+      genFV, othFV)+
+    row('Frais de gestion UC',
+      `${GF.uc.toFixed(2).replace('.',',')}% / an sur encours UC moyen estimé`,
+      genFGuc, othFGuc)+
+    row('Frais de gestion fonds €',
+      `${GF.eu.toFixed(2).replace('.',',')}% / an sur encours € moyen estimé`,
+      genFGeu, othFGeu)+
+    row('Sous-total phase épargne','',genFV+genFGuc+genFGeu, othFV+othFGuc+othFGeu, true)+
+
+    sepRow('Phase de rente — hypothèse '+RENTE_DUREE+' ans · rente '+new Intl.NumberFormat('fr-FR').format(rente)+' €/mois')+
+    row('Frais arrérages rente — %',
+      `${GF.sr.toFixed(2).replace('.',',')}% sur chaque versement × ${RENTE_DUREE} ans`,
+      renteAnR*(GF.sr/100)*RENTE_DUREE, renteAnR*(OF.sr/100)*RENTE_DUREE)+
+    row('Frais arrérages rente — fixes €',
+      `${GF.se.toFixed(1).replace('.',',')} € fixes × 4 versements/an × ${RENTE_DUREE} ans`,
+      GF.se*4*RENTE_DUREE, OF.se*4*RENTE_DUREE)+
+    row('Sous-total phase rente','', genFSR_tot, othFSR_tot, true)+
+
+    sepRow('Bilan total')+
+    row('TOTAL FRAIS SUR LA DURÉE DE VIE DU CONTRAT',
+      'Phase épargne + phase rente',
+      genTotal, othTotal, true);
+
+  $('recap-note').innerHTML=`
+    Hypothèses : frais de gestion sur encours moyen estimé (capital final ÷ 2).
+    Rendements nets retenus : Generali ${(genRateNet*100).toFixed(2).replace('.',',')}%/an · concurrent ${(othRateNet*100).toFixed(2).replace('.',',')}%/an
+    (UC ${(gWUC*100).toFixed(0)}%/${(oWUC*100).toFixed(0)}% — Fonds € ${(gWEU*100).toFixed(0)}%/${(oWEU*100).toFixed(0)}%).
+    Phase de rente : hypothèse ${RENTE_DUREE} ans à ${new Intl.NumberFormat('fr-FR').format(rente)} €/mois bruts.
+    Document interne — usage conseiller — non contractuel.`;
+}
+
+// ── UI ──
+function switchTab(btn,id){
+  document.querySelectorAll('.tb-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  $(id).classList.add('active');
+}
+
+function selectContract(id){
+  selId=id;
+  const C=DB.find(c=>c.id===id);if(!C)return;
+  document.querySelectorAll('.ci').forEach(el=>el.classList.toggle('selected',el.dataset.id===id));
+  $('topbar-select').value=id;
+  $('empty-state').style.display='none';
+  // Activer le premier onglet si aucun n'est actif
+  if(!document.querySelector('.tab-panel.active')){
+    document.querySelector('#tab-params').classList.add('active');
   }
-  return array;
+  $('oth-title').textContent=C.name.substring(0,28);
+  if($('uc-rate-oth-title')) $('uc-rate-oth-title').textContent=C.name.substring(0,28);
+  setSliders('o',C.def);
+  run();
 }
 
-/* =========================
-   32 COMPAGNIES
-========================= */
-const names=[
-"Generali","Groupama","MMA","April","Axa","SwissLife","Allianz","Aviva",
-"CNP","AG2R","Malakoff","Gan","MACSF","Matmut","GMF","MAAF",
-"Suravenir","Spirica","Cardif","Abeille","Apicil","Sogecap",
-"BPCE Vie","Monceau","La Mondiale","Oradea","Neuflize","Primonial",
-"UAF Life","Patrimoine Vie","SMABTP","Intencial"
-];
+function selectFromTopbar(id){if(id)selectContract(id);}
+function setFilter(btn,cat){filter=cat;document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderList()}
 
-let companies=[];
-let fullRanked=[];
-let visibleCount=0;
-let chartInstance=null;
-
-/* =========================
-   GENERATION
-========================= */
-function generateCompanies(){
-
-let arr=[];
-
-arr.push({
-name:"Generali",
-entry:0.95,
-exit:0,
-yieldMin:5.77,
-yieldMax:8.70
-});
-
-for(let i=1;i<32;i++){
-
-let entry=(1.4+i*0.10+Math.random()*0.20);
-let exit=(0.7+i*0.08+Math.random()*0.20);
-
-if(entry>5) entry=5;
-if(exit>5) exit=5;
-
-let max=(5.3-i*0.09-Math.random()*0.15);
-if(max<2.2) max=2.2;
-
-let min=max-(0.6+Math.random()*0.6);
-if(min<1.3) min=1.3;
-
-arr.push({
-name:names[i],
-entry:+entry.toFixed(2),
-exit:+exit.toFixed(2),
-yieldMin:+min.toFixed(2),
-yieldMax:+max.toFixed(2)
-});
-
+function renderList(){
+  const q=$('sinput').value.toLowerCase();
+  const f=DB.filter(c=>(filter==='all'||c.cat===filter)&&(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)));
+  $('clist').innerHTML=f.map(c=>`
+    <div class="ci ${c.id===selId?'selected':''}" data-id="${c.id}" onclick="selectContract('${c.id}')">
+      <div class="ci-dot"></div>
+      <div><div class="ci-name">${c.name}</div><div class="ci-co">${c.company}</div></div>
+      <div class="ci-tag">${c.def.v.toFixed(1).replace('.',',')}%</div>
+    </div>`).join('');
 }
 
-return arr;
+// Populate topbar select
+function populateSelect(){
+  const cats={reseau:'Réseau',mutuelle:'Mutuelles',banque:'Banques',online:'Internet'};
+  const groups={};
+  DB.forEach(c=>{if(!groups[c.cat])groups[c.cat]=[];groups[c.cat].push(c);});
+  const sel=$('topbar-select');
+  Object.entries(cats).forEach(([k,label])=>{
+    if(!groups[k])return;
+    const og=document.createElement('optgroup');og.label=label;
+    groups[k].forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;og.appendChild(o);});
+    sel.appendChild(og);
+  });
 }
 
-/* =========================
-   SCORE
-========================= */
-function score(c){
-const avg=(c.yieldMin+c.yieldMax)/2;
-return avg-(c.entry*0.55)-(c.exit*0.45);
-}
-
-/* =========================
-   CHART
-========================= */
-function renderChart(ranked){
-
-if(chartInstance){ chartInstance.destroy(); }
-
-chartInstance=new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:ranked.slice(0,10).map(c=>c.name),
-datasets:[
-{label:"Rendement max",data:ranked.slice(0,10).map(c=>c.yieldMax),backgroundColor:"#22c55e"},
-{label:"Frais entrée",data:ranked.slice(0,10).map(c=>c.entry),backgroundColor:"#ef4444"},
-{label:"Frais sortie",data:ranked.slice(0,10).map(c=>c.exit),backgroundColor:"#f97316"}
-]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
-});
-}
-
-/* =========================
-   AJOUT ELEMENT
-========================= */
-function addLine(c,i){
-
-let entry=c.entry<1.5?"best":c.entry<3?"medium":"low";
-let exit=c.exit<1.5?"best":c.exit<3?"medium":"low";
-let y=c.yieldMax>=5?"best":c.yieldMax>=3.5?"medium":"low";
-
-let div=document.createElement("div");
-div.className="company";
-
-div.innerHTML=`
-<strong>${i+1}. ${c.name}</strong><br>
-Rendement : <span class="${y}">${c.yieldMin}% → ${c.yieldMax}%</span><br>
-Frais entrée : <span class="${entry}">${c.entry}%</span><br>
-Frais sortie : <span class="${exit}">${c.exit}%</span>
-`;
-
-document.getElementById("results").appendChild(div);
-setTimeout(()=>div.classList.add("show"),50);
-}
-
-/* =========================
-   AFFICHER PLUS
-========================= */
-function showMore(){
-
-let next=visibleCount+6;
-if(next>fullRanked.length) next=fullRanked.length;
-
-for(let i=visibleCount;i<next;i++){
-setTimeout(()=>addLine(fullRanked[i],i),(i-visibleCount)*120);
-}
-
-visibleCount=next;
-
-if(visibleCount>=fullRanked.length){
-document.getElementById("moreBtn").style.display="none";
-}else{
-document.getElementById("moreBtn").style.display="block";
-}
-}
-
-/* =========================
-   SIMULATION
-========================= */
-function simulate(){
-
-companies=generateCompanies();
-
-document.getElementById("loaderContainer").style.display="block";
-document.getElementById("results").innerHTML="";
-document.getElementById("moreBtn").style.display="none";
-
-visibleCount=0;
-
-let progress=0;
-let stepIndex=0;
-
-const steps=[
-"Accès sécurisé au comparateur privé...",
-"Vérification des accès partenaires agréés...",
-"Chargement des grilles exclusives assureurs...",
-"Simulation des conditions de marché...",
-"Analyse des frais réels négociés...",
-"Croisement des données partenaires...",
-"Finalisation de votre sélection..."
-];
-
-let loaderText=document.getElementById("loaderText");
-
-let interval=setInterval(()=>{
-
-progress += (100/900);
-document.getElementById("loaderBar").style.width=progress+"%";
-
-let newStep=Math.floor((progress/100)*steps.length);
-
-if(newStep!==stepIndex && newStep<steps.length){
-stepIndex=newStep;
-loaderText.innerText=steps[stepIndex];
-}
-
-if(progress>=100){
-clearInterval(interval);
-
-document.getElementById("loaderContainer").style.display="none";
-
-fullRanked=companies.map(c=>({...c,score:score(c)}))
-.sort((a,b)=>b.score-a.score);
-
-showMore();
-
-setTimeout(()=>renderChart(fullRanked),800);
-}
-
-},100);
-
-}
-
-/* =========================
-   BUBBLES
-========================= */
-const canvas=document.getElementById("bubbleCanvas");
-const ctx=canvas.getContext("2d");
-
-let w,h;
-function resize(){
-w=window.innerWidth;
-h=window.innerHeight;
-canvas.width=w;
-canvas.height=h;
-}
-resize();
-window.addEventListener("resize",resize);
-
-let bubbles=[];
-for(let i=0;i<80;i++){
-bubbles.push({x:Math.random()*w,y:Math.random()*h,r:3+Math.random()*4,vy:0.3+Math.random()});
-}
-
-function animate(){
-ctx.clearRect(0,0,w,h);
-for(let b of bubbles){
-b.y-=b.vy;
-if(b.y<0){b.y=h;b.x=Math.random()*w;}
-ctx.beginPath();
-ctx.fillStyle="#60a5fa";
-ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-ctx.fill();
-}
-requestAnimationFrame(animate);
-}
-animate();
-
+// Init
+setSliders('g',GEN_DEF);
+populateSelect();
+renderList();
 </script>
-
 </body>
 </html>
