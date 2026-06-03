@@ -537,7 +537,10 @@ const DB=[
 {id:'allianz',  name:'PER Allianz Horizon (ANCRE)',        company:'Allianz Retraite',            cat:'reseau', def:{v:4.80,uc:1.05,eu:0.85,sr:1.00,ur:6.5,us:50}, euro:[null,null,null,null,null,2.52,2.08],
  note:'Frais versements 4,8% max · Gestion 0,85%/an UC et € · Garantie plancher UC +0,20% · Frais rente en service 1,00%/an (0,70% gestion + 0,30% tables mortalité) · Source : Fiche produit Allianz PER Horizon mars 2020'},
 {id:'swisslife',name:'PER SwissLife',                    company:'Swiss Life',                 cat:'reseau', def:{v:4.00,uc:0.96,eu:0.80,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,null,1.70], note:'Fonds euro modeste — accent gestion pilotée'},
-{id:'ag2r',     name:'PER Ambition Retraite',            company:'AG2R La Mondiale',           cat:'reseau', def:{v:4.00,uc:0.96,eu:0.80,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,null,null]},
+{id:'ag2r',     name:'Vision Retraite Premium',          company:'AG2R La Mondiale',           cat:'reseau',
+ def:{v:1.50,uc:1.20,eu:0.90,sr:3.00,ur:6.5,us:50},
+ euro:[null,null,null,null,null,null,null],
+ note:'Frais versement 1,5% · Gestion € 0,9% / UC 1,2% · Frais sortie rente 3% · Fonds actions moy. 2,20% / obligations 0,98% / diversifiés 1,70% · Source : annexe frais AG2R officielle'},
 {id:'groupama', name:'PER Nouvelle Vie',                 company:'Groupama Gan Vie',           cat:'reseau', def:{v:3.50,uc:0.96,eu:0.75,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,2.00,2.00]},
 {id:'gan',      name:'PER Gan Patrimoine',               company:'Groupama Gan Vie',           cat:'reseau', def:{v:3.50,uc:0.96,eu:0.75,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,2.00,3.02]},
 {id:'mma',      name:'PER MMA Signature',                company:'MMA Vie (Covéa)',            cat:'reseau', def:{v:4.00,uc:0.96,eu:0.80,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,null,null]},
@@ -572,10 +575,18 @@ const DB=[
 {id:'yomoni',   name:'Yomoni Retraite+',                 company:'Yomoni',                     cat:'online',  def:{v:0.00,uc:0.30,eu:0.30,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,null,null], note:'Gestion pilotée 100% ETF · Total ~1,6%/an'},
 {id:'ramify',   name:'PER Ramify',                       company:'Ramify',                     cat:'online',  def:{v:0.00,uc:0.50,eu:0.50,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,null,null], note:'Gestion pilotée ETF + PE · Total ~1,3-1,4%/an'},
 {id:'fortuneo', name:'Fortuneo PER',                     company:'Fortuneo / Suravenir',       cat:'online',  def:{v:0.00,uc:0.60,eu:0.60,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,null,3.20]},
-{id:'lucya',    name:'Lucya Cardif PER',                 company:'Cardif / BNP Paribas',       cat:'online',  def:{v:0.00,uc:0.50,eu:0.60,sr:0.00,ur:6.5,us:50}, euro:[null,null,null,null,null,null,2.75], note:'0,5% gestion UC · Fonds euro ~3,17% avec bonus'},
+{id:'lucya',    name:'Lucya Cardif PER',                 company:'Cardif Retraite / UFEP',     cat:'online',
+ def:{v:0.00,uc:0.50,eu:0.70,sr:1.50,ur:6.5,us:50},
+ euro:[null,null,null,null,null,null,2.75],
+ note:'0% frais versement · Gestion € 0,70% / UC 0,50% (contrat) · Frais fonds UC moyens : actions ~1,89%, obligations ~1,13%, diversifiés ~1,86% · Frais sortie rente 1,5% max · Source : tableau frais Mars 2026'},
 {id:'suravenir',name:'PER Suravenir Opportunités',       company:'Suravenir',                  cat:'online',  def:{v:0.00,uc:0.70,eu:0.60,sr:0.00,ur:6.5,us:50}, euro:[2.00,1.70,1.50,2.10,2.65,3.00,3.00]},
 {id:'oradea',   name:'PER LIGNAGE',                      company:'Oradéa Vie',                 cat:'online',  def:{v:0.00,uc:0.70,eu:0.60,sr:0.00,ur:6.5,us:50}, euro:[1.20,1.10,1.20,null,3.50,3.50,3.50]},
 {id:'eres',     name:'PER Eres by Spirica',              company:'Eres / Spirica',             cat:'online',  def:{v:0.00,uc:0.80,eu:0.70,sr:0.00,ur:6.5,us:50}, euro:[null,null,1.35,2.00,2.83,2.83,2.78]},
+{id:'optimum',  name:'Optimum PER Sérénité',             company:'Optimum Vie / APRP',         cat:'online',
+ def:{v:4.95,uc:0.99,eu:0.99,sr:3.00,ur:6.5,us:50},
+ euro:[null,null,null,null,null,null,null],
+ gbf:true,
+ note:'Frais versement 4,95% max · Gestion unique 0,99%/an UC et € · Frais sortie rente 3% · <strong>Garantie de Bonne Fin obligatoire</strong> : coût = 70% versements an 1 + 30% versements an 2, plafonné à 12 000€ — prélevé sur le 1er versement avant investissement · Source : Notice CG août 2022'},
 ];
 
 // ══════════════════════════════════════════════════════
@@ -657,6 +668,8 @@ function run(){
   const diff=gF-oF,diffPct=oF>0?(diff/oF*100):0;
   const totalV=monthly*12*years;
   const extraV=monthly*(of.v/100)*12*years-monthly*(gf.v/100)*12*years;
+  // GBF Optimum — notification seulement, ne modifie pas les calculs
+  const gbfCost = C.gbf ? Math.min(0.70*(monthly*12)+0.30*(monthly*12), 12000) : 0;
 
   const gTot=gf.us+gf.es,oTot=of.us+of.es;
   const gwUC=gTot>0?gf.us/gTot:0.5,gwEU=gTot>0?gf.es/gTot:0.5;
@@ -689,8 +702,8 @@ function run(){
       <div class="bb-text">
         <h2>${diff>=0?`En restant avec ${C.name}, le client laisse de l'argent sur la table`:`${C.name} est compétitif sur ce scénario`}</h2>
         <p>${diff>=0
-          ?`Sur ${years} ans, Generali génère <strong>${fmt(diff)}</strong> de capital supplémentaire. Frais de versement en surplus : <strong>${fmt(extraV)}</strong>.${diffR>0?' Avantage rente Generali : <strong>+'+fmtD(diffR/12)+'/mois</strong>.':''}`
-          :`Ce contrat présente un meilleur rendement fonds euros historique (${oAvg?oAvg.toFixed(2)+'%':'n.d.'} vs ${gAvg.toFixed(2)}%/an). Argument Generali : versements ${p(gf.v)} vs ${p(of.v)} — économie <strong>${fmt(Math.abs(extraV))}</strong>.`}
+          ?`Sur ${years} ans, Generali génère <strong>${fmt(diff)}</strong> de capital supplémentaire. Frais versements en surplus : <strong>${fmt(extraV)}</strong>.${gbfCost>0?` + GBF Optimum : <strong>${fmt(gbfCost)}</strong> non investis.`:''}${diffR>0?' Avantage rente Generali : <strong>+'+fmtD(diffR/12)+'/mois</strong>.':''}`
+          :`Ce contrat présente un meilleur rendement fonds euros historique (${oAvg?oAvg.toFixed(2)+'%':'n.d.'} vs ${gAvg.toFixed(2)}%/an). Argument Generali : versements ${p(gf.v)} vs ${p(of.v)} — économie <strong>${fmt(Math.abs(extraV))}</strong>.${gbfCost>0?` GBF Optimum : <strong>${fmt(gbfCost)}</strong> non investis.`:''}`}
         </p>
       </div>
       <div class="bb-num">
@@ -729,6 +742,7 @@ function run(){
         <div class="perf-row">${C.euro.map((v,i)=>`<div class="py"><div class="py-y">${YL[i]}</div><div class="py-v ${v!==null&&v>0?'b':'na'}">${v!==null&&v>0?v.toFixed(2)+'%':'n.d.'}</div></div>`).join('')}</div>
         <div class="avg-pill"><span style="color:var(--text2)">Moy. :</span><span class="av" style="color:var(--oth)">${oAvg?oAvg.toFixed(2)+' %/an':'n.d.'}</span></div>
         ${C.note?`<div style="font-size:.6rem;color:var(--text3);margin-top:5px;line-height:1.5">ℹ️ ${C.note}</div>`:''}
+        ${gbfCost>0?`<div style="font-size:.62rem;color:var(--red);margin-top:6px;padding:5px 8px;background:rgba(176,42,42,.07);border-radius:5px;line-height:1.5"><strong>⚠️ Garantie de Bonne Fin : ${fmt(gbfCost)}</strong> prélevés sur le 1er versement avant tout investissement (formule : 70%×an1 + 30%×an2, plafonné 12 000€).</div>`:''}
       </div>
     </div>`;
 
@@ -778,16 +792,17 @@ function run(){
 
   // ── Bilan frais ──
   const RD=20;
-  const gFV=monthly*(gf.v/100)*12*years,oFV=monthly*(of.v/100)*12*years;
-  const gFGuc=(gF/2)*(gf.uc/100)*years,oFGuc=(oF/2)*(of.uc/100)*years;
-  const gFGeu=(gF/2)*(gf.eu/100)*years,oFGeu=(oF/2)*(of.eu/100)*years;
-  const gFR=(renteAn*(gf.sr/100)+gf.se*4)*RD,oFR=(renteAn*(of.sr/100)+of.se*4)*RD;
-  const gTF=gFV+gFGuc+gFGeu+gFR,oTF=oFV+oFGuc+oFGeu+oFR;
+  const gFV=monthly*(gf.v/100)*12*years, oFV=monthly*(of.v/100)*12*years;
+  const gFGuc=(gF/2)*(gf.uc/100)*years,  oFGuc=(oF/2)*(of.uc/100)*years;
+  const gFGeu=(gF/2)*(gf.eu/100)*years,  oFGeu=(oF/2)*(of.eu/100)*years;
+  const gFR=(renteAn*(gf.sr/100)+gf.se*4)*RD, oFR=(renteAn*(of.sr/100)+of.se*4)*RD;
+  const gTF=gFV+gFGuc+gFGeu+gFR;
+  const oTF=oFV+oFGuc+oFGeu+oFR+gbfCost; // GBF inclus dans le total concurrent si applicable
   const ecoT=oTF-gTF;
 
   $('hero-grid').innerHTML=`
     <div class="hero h-g"><div class="hero-l">Total frais Generali</div><div class="hero-v g">${fmt(gTF)}</div><div class="hero-s">${years} ans épargne + ${RD} ans rente</div></div>
-    <div class="hero h-o"><div class="hero-l">Total frais ${C.name.substring(0,20)}</div><div class="hero-v rd">${fmt(oTF)}</div><div class="hero-s">${years} ans épargne + ${RD} ans rente</div></div>
+    <div class="hero h-o"><div class="hero-l">Total frais ${C.name.substring(0,20)}</div><div class="hero-v rd">${fmt(oTF)}</div><div class="hero-s">${years} ans épargne + ${RD} ans rente${gbfCost>0?` (dont GBF ${fmt(gbfCost)})`:''}</div></div>
     <div class="hero h-e"><div class="hero-l">Économie avec Generali</div><div class="hero-v ${ecoT>=0?'gn':'rd'}">${ecoT>=0?'+':''}${fmt(ecoT)}</div><div class="hero-s">${ecoT>=0?'Le client économise cette somme':'Le concurrent est moins cher'}</div></div>`;
 
   $('rt-th-o').textContent=C.name.substring(0,18);
@@ -800,16 +815,17 @@ function run(){
   $('rt-body').innerHTML=
     sep(`Phase épargne — ${years} ans`)+
     row('Frais sur versements',`${p(gf.v)} × ${fmt(monthly)}/mois × ${years} ans`,gFV,oFV)+
-    row('Frais de gestion UC',`${p(gf.uc)}/an sur encours UC moyen estimé`,gFGuc,oFGuc)+
-    row('Frais de gestion fonds €',`${p(gf.eu)}/an sur encours € moyen estimé`,gFGeu,oFGeu)+
-    row('Sous-total épargne','',gFV+gFGuc+gFGeu,oFV+oFGuc+oFGeu,true)+
+    (gbfCost>0?row('Garantie de Bonne Fin',`70%×an1 + 30%×an2, plafonné 12 000€`,0,gbfCost):'')+
+    row('Frais de gestion UC',`${p(gf.uc)}/an sur encours moyen`,gFGuc,oFGuc)+
+    row('Frais de gestion fonds €',`${p(gf.eu)}/an sur encours moyen`,gFGeu,oFGeu)+
+    row('Sous-total épargne','',gFV+gFGuc+gFGeu,oFV+gbfCost+oFGuc+oFGeu,true)+
     sep(`Phase rente — ${RD} ans · ${new Intl.NumberFormat('fr-FR').format(rente)} €/mois`)+
     row('Frais arrérages — %',`${p(gf.sr)} × rente annuelle × ${RD} ans`,renteAn*(gf.sr/100)*RD,renteAn*(of.sr/100)*RD)+
     row('Frais arrérages — € fixes',`${gf.se.toFixed(1)} €/versement × 4/an × ${RD} ans`,gf.se*4*RD,of.se*4*RD)+
     row('Sous-total rente','',gFR,oFR,true)+
     sep('Bilan total')+
     row('TOTAL — épargne + rente','',gTF,oTF,true);
-  $('bilan-note').innerHTML=`Encours moyen = capital final ÷ 2 (approximation conservative). Phase rente : ${RD} ans à ${new Intl.NumberFormat('fr-FR').format(rente)} €/mois bruts. Document interne — usage conseiller — non contractuel.`;
+  $('bilan-note').innerHTML=`Encours moyen = capital final ÷ 2.${gbfCost>0?` GBF Optimum (${fmt(gbfCost)}) intégrée dans le total concurrent.`:''} Phase rente : ${RD} ans à ${new Intl.NumberFormat('fr-FR').format(rente)} €/mois. Document interne — non contractuel.`;
 }
 
 function calcEco(gf,of,gF,oF,monthly,years,renteAn){
